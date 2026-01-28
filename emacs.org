@@ -12,6 +12,8 @@ We are going to turn off the startup message, enable a bell for when we hit file
   (blink-cursor-mode -1)
   		   
   (global-display-line-numbers-mode 1)
+  (use-package vterm
+    :ensure t)
 #+end_src
 
 * Theme
@@ -44,6 +46,21 @@ This is where we define EVIL keybinds which are just so much better for text edi
       :config
       (global-evil-leader-mode)))
 #+end_src
+
+** Org mode
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((dot . t))) ; this line activates dot
+(defun my/fix-inline-images ()
+  (when org-inline-image-overlays
+    (org-redisplay-inline-images)))
+
+(add-hook 'org-babel-after-execute-hook 'my/fix-inline-images)
+#+end_src
+
+#+RESULTS:
+| my/fix-inline-images |
 
 #+begin_src emacs-lisp
   ;; The `vertico' package applies a vertical layout to the minibuffer.

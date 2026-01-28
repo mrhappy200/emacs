@@ -102,6 +102,7 @@
           extraEmacsPackages = epkgs: [
             epkgs.cask
             pkgs.shellcheck
+            pkgs.graphviz-nox
           ];
         };
 
