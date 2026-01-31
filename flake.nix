@@ -40,6 +40,7 @@
               #Any variables defined here will replace matchinv @VARIABLENAME@ blocks in the input file
               # inherit (config.xdg) configHome dataHome;
               username = "mrhappy200";
+              hunspell = "${pkgs.lib.getExe pkgs.hunspell}";
             };
           };
 
