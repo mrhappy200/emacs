@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     emacs-overlay = {
       url = "github:/nix-community/emacs-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,6 +16,7 @@
       nixpkgs,
       flake-utils,
       emacs-overlay,
+      rust-overlay,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -22,11 +24,40 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = builtins.attrValues emacs-overlay.overlays;
+          overlays = (builtins.attrValues emacs-overlay.overlays) ++ [
+            (import rust-overlay)
+          ];
         };
 
+        configFile = ./emacs.org;
+
         nativeBuildInputs = with pkgs; [ ];
-        buildInputs = with pkgs; [ ];
+        extractedBuildInputs =
+          let
+            regex = ''.*%dep%\+\{(.+)}.*'';
+            text = builtins.readFile configFile;
+
+            lines = builtins.filter (l: l != [ ] && l != "") (builtins.split "\n" text);
+
+            depLines = builtins.filter (line: builtins.match regex line != null) lines;
+
+            deps = builtins.map (l: builtins.elemAt (builtins.match regex l) 0) depLines;
+            depPkgs = builtins.map (n: pkgs.${n}) deps;
+          in
+          depPkgs;
+        buildInputs =
+          with pkgs;
+          [
+            rust-toolchain
+          ]
+          ++ extractedBuildInputs;
+        rust-toolchain = (pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default)).override {
+          extensions = [
+            "rust-src"
+            "rust-analyzer"
+          ];
+        };
+
         myEmacs = pkgs.emacsWithPackagesFromUsePackage {
           # Your Emacs config file. Org mode babel files are also
           # supported.
@@ -35,12 +66,13 @@
           #     support.
           #config = ./emacs.org;
           config = pkgs.replaceVarsWith {
-            src = ./emacs.org;
+            src = configFile;
             replacements = {
               #Any variables defined here will replace matchinv @VARIABLENAME@ blocks in the input file
               # inherit (config.xdg) configHome dataHome;
               username = "mrhappy200";
               hunspell = "${pkgs.lib.getExe pkgs.hunspell}";
+              rust-toolchain = "${rust-toolchain}";
             };
           };
 
@@ -49,32 +81,6 @@
           # Its value can also be a derivation like this if you want to do some
           # substitution:
           defaultInitFile = true;
-          #defaultInitFile = {
-          #  config = pkgs.replaceVarsWith {
-          #    src = pkgs.tangleOrgBabelFile "init.el" ./emacs.org {
-          #      languages = [
-          #        "emacs-lisp"
-          #        "elisp"
-          #      ];
-          #    };
-          #    replacements = {
-          #      #Any variables defined here will replace matchinv @VARIABLENAME@ blocks in the input file
-          #      # inherit (config.xdg) configHome dataHome;
-          #    };
-          #  };
-          #};
-          #defaultInitFile = pkgs.replaceVarsWith {
-          #  src = pkgs.tangleOrgBabelFile "init.el" ./emacs.org {
-          #    languages = [
-          #      "emacs-lisp"
-          #      "elisp"
-          #    ];
-          #  };
-          #  replacements = {
-          #    #Any variables defined here will replace matchinv @VARIABLENAME@ blocks in the input file
-          #    #inherit (config.xdg) configHome dataHome;
-          #  };
-          #};
 
           # Package is optional, defaults to pkgs.emacs
           package = pkgs.emacs-unstable-pgtk;
@@ -102,14 +108,26 @@
           # language servers, formatters, etc)
           extraEmacsPackages = epkgs: [
             epkgs.cask
-            pkgs.shellcheck
-            pkgs.graphviz-nox
+
           ];
         };
-
+        myWrappedEmacs = pkgs.symlinkJoin {
+          name = "emacs";
+          buildInputs = [ pkgs.makeWrapper ];
+          paths = [ myEmacs ];
+          postBuild =
+            let
+            in
+            ''
+              wrapProgram $out/bin/emacs \
+                --prefix PATH : ${pkgs.lib.makeBinPath buildInputs}
+              wrapProgram $out/bin/emacsclient \
+                --prefix PATH : ${pkgs.lib.makeBinPath buildInputs}
+            '';
+        };
       in
       {
-        packages.default = myEmacs;
+        packages.default = myWrappedEmacs;
         devShells.default = pkgs.mkShell { inherit myEmacs nativeBuildInputs buildInputs; };
       }
     );
