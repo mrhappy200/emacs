@@ -166,30 +166,8 @@ I am doing completion using the lovely Corfu
           corfu-popupinfo-delay 0)
     (corfu-history-mode)
     (corfu-popupinfo-mode)
-    (with-eval-after-load 'evil
-      (evil-make-intercept-map corfu-map)
-      (add-to-list 'evil-intercept-maps 'corfu-map)
-      (evil-normalize-keymaps))
     (with-eval-after-load 'corfu
-      (defvar corfu-evil-emulation-map-alist
-        '((completion-in-region-mode . corfu-map)))
-      (add-to-list 'emulation-mode-map-alists 'corfu-evil-emulation-map-alist)
-      (defvar-local corfu-evil--saved-emulation-mode-map-alists nil)
       (defvar-local corfu-evil--saved-terminal-map nil)
-      (defun corfu-evil--emulation-activate (&rest _)
-        (setq corfu-evil--saved-emulation-mode-map-alists
-              emulation-mode-map-alists)
-        (setq-local emulation-mode-map-alists
-                    (cons 'corfu-evil-emulation-map-alist
-                          (delq 'corfu-evil-emulation-map-alist
-                                emulation-mode-map-alists))))
-      (defun corfu-evil--emulation-deactivate (buffer)
-        (when (buffer-live-p buffer)
-          (with-current-buffer buffer
-            (when corfu-evil--saved-emulation-mode-map-alists
-              (setq-local emulation-mode-map-alists
-                          corfu-evil--saved-emulation-mode-map-alists)
-              (setq corfu-evil--saved-emulation-mode-map-alists nil)))))
       (defun corfu-evil--terminal-activate (&rest _)
         (setq corfu-evil--saved-terminal-map overriding-terminal-local-map)
         (setq overriding-terminal-local-map corfu-map))
@@ -198,8 +176,6 @@ I am doing completion using the lovely Corfu
           (with-current-buffer buffer
             (setq overriding-terminal-local-map corfu-evil--saved-terminal-map)
             (setq corfu-evil--saved-terminal-map nil))))
-      (advice-add 'corfu--setup :after #'corfu-evil--emulation-activate)
-      (advice-add 'corfu--teardown :after #'corfu-evil--emulation-deactivate)
       (advice-add 'corfu--setup :after #'corfu-evil--terminal-activate)
       (advice-add 'corfu--teardown :after #'corfu-evil--terminal-deactivate))
     ;; Explicitly clear these from the base map to prevent interaction issues
