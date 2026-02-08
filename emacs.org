@@ -158,6 +158,18 @@ I am doing completion using the lovely Corfu
     :ensure t
     :init
     (global-corfu-mode)
+    :general
+    (:keymaps 'corfu-map
+     "RET"     nil
+     "TAB"     nil
+     "C-j"     #'corfu-next
+     "C-k"     #'corfu-previous
+     "C-y"     #'corfu-insert
+     "M-j"     #'corfu-scroll-down
+     "M-k"     #'corfu-scroll-up
+     "M-d"     #'corfu-info-documentation
+     "M-l"     #'corfu-info-location
+     "<escape>" #'corfu-quit)
     :config
     (setq corfu-auto t
           corfu-auto-delay 0
@@ -166,29 +178,27 @@ I am doing completion using the lovely Corfu
           corfu-popupinfo-delay 0)
     (corfu-history-mode)
     (corfu-popupinfo-mode)
+    ;; This is some attrocious AI generated slop code that does somehow fixy my issue lol. For some reason corfu failed to override evils keybinds (like C-k) and this fixed it.
     (with-eval-after-load 'corfu
-      (defvar-local corfu-evil--saved-terminal-map nil)
-      (defun corfu-evil--terminal-activate (&rest _)
-        (setq corfu-evil--saved-terminal-map overriding-terminal-local-map)
-        (setq overriding-terminal-local-map corfu-map))
-      (defun corfu-evil--terminal-deactivate (buffer)
-        (when (buffer-live-p buffer)
-          (with-current-buffer buffer
-            (setq overriding-terminal-local-map corfu-evil--saved-terminal-map)
-            (setq corfu-evil--saved-terminal-map nil))))
-      (advice-add 'corfu--setup :after #'corfu-evil--terminal-activate)
-      (advice-add 'corfu--teardown :after #'corfu-evil--terminal-deactivate))
-    ;; Explicitly clear these from the base map to prevent interaction issues
-    (keymap-set corfu-map "RET" nil)
-    (keymap-set corfu-map "TAB" nil)
-    (keymap-set corfu-map "C-j" #'corfu-next)
-    (keymap-set corfu-map "C-k" #'corfu-previous)
-    (keymap-set corfu-map "C-y" #'corfu-insert)
-    (keymap-set corfu-map "M-j" #'corfu-scroll-down)
-    (keymap-set corfu-map "M-k" #'corfu-scroll-up)
-    (keymap-set corfu-map "M-d" #'corfu-info-documentation)
-    (keymap-set corfu-map "M-l" #'corfu-info-location)
-    (keymap-set corfu-map "<escape>" #'corfu-quit))
+      (defvar corfu-evil-emulation-map-alist
+        '((corfu--popup-visible-p . corfu-map)))
+      (defvar-local corfu-evil--saved-emulation-mode-map-alists nil)
+      (defun corfu-evil--emulation-activate (&rest _)
+        (setq corfu-evil--saved-emulation-mode-map-alists
+              emulation-mode-map-alists)
+        (setq-local emulation-mode-map-alists
+                    (cons 'corfu-evil-emulation-map-alist
+                          (delq 'corfu-evil-emulation-map-alist
+                                emulation-mode-map-alists))))
+      (defun corfu-evil--emulation-deactivate (&rest _)
+        (when corfu-evil--saved-emulation-mode-map-alists
+          (setq-local emulation-mode-map-alists
+                      corfu-evil--saved-emulation-mode-map-alists)
+          (setq corfu-evil--saved-emulation-mode-map-alists nil)))
+      (advice-add 'corfu--popup-show :after #'corfu-evil--emulation-activate)
+      (advice-add 'corfu--popup-hide :after #'corfu-evil--emulation-deactivate)
+      (advice-add 'corfu--teardown :after #'corfu-evil--emulation-deactivate))
+    )
    
 
    ;(use-package corfu
