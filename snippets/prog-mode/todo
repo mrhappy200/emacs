@@ -1,0 +1,4 @@
+# name: todo
+# key: todo
+# --
+`(if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)`TODO $0

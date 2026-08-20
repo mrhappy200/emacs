@@ -1,5 +1,6 @@
 #+title: My(@username@) Emacs configuration
 #+PROPERTY: header-args:emacs-lisp :tangle yes :comments link
+#+PROPERTY: header-args :eval yes
 
 This is the syntax I use for adding dependencies in the file. Sadly it does use IFD (I think....). That having been said, so does emacs-overlay so I think it is fine untill dynamic derivations gets introduced. Note that it cannot be commented out because my parsing regex is rather naïve, his code block does actually install sl (choo-choo).
 ~%dep%+{sl}~
@@ -25,6 +26,46 @@ We are going to turn off the startup message, enable a bell for when we hit file
   ;; no indent-tabs-mode for me
   (setq-default indent-tabs-mode nil)
 #+end_src
+
+* EVIL mode
+#+begin_src emacs-lisp
+  (use-package evil
+    :ensure t ;; install the evil package if not installed
+    :init ;; tweak evil's configuration before loading it
+    (setq evil-respect-visual-line-mode t)
+    (setq evil-search-module 'evil-search)
+    (setq evil-ex-complete-emacs-commands nil)
+    (setq evil-vsplit-window-right t)
+    (setq evil-split-window-below t)
+    (setq evil-shift-round nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-keybinding nil)
+    :config ;; tweak evil after loading it
+    (evil-mode))
+  #+end_src
+
+  ** EVIL keybindings with ~general.el~
+  This is where we define EVIL keybinds which are just so much better for text editing, if a little worse for accessing Emacs' more advanced functionality.
+  #+begin_src emacs-lisp
+    (use-package general
+      :ensure t
+      :config
+      (general-auto-unbind-keys)
+      (general-override-mode))
+    (general-create-definer my-leader-def
+      ;; :prefix my-leader
+      :prefix "SPC")
+    (my-leader-def 'normal 'global
+      "g" '("Games" . (keymap))
+      "g t" '("Tetris" . tetris))
+
+    (general-create-definer my-local-leader-def
+      ;; :prefix my-local-leader
+      :prefix "SPC m")
+  #+end_src
+
+* MISC
+
 ** Please put the autosave and backup files somewhere where git won't get them
 #+BEGIN_SRC emacs-lisp
   ;; Put backup files neatly away
@@ -45,6 +86,61 @@ We are going to turn off the startup message, enable a bell for when we hit file
         kept-new-versions 5    ; keep some new versions
         kept-old-versions 2)   ; and some old ones, too
 #+END_SRC
+
+** QOL editing and snippets
+#+begin_src emacs-lisp
+    ;(defvar my/tempel-templates
+    ;  '(fundamental-mode
+    ;    (today (format-time-string "%Y-%m-%d") :doc "Insert today's date")
+    ;    prog-mode
+    ;    (fixme (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "FIXME ")
+    ;    (todo (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "TODO ")
+    ;    emacs-lisp-mode
+    ;    (my-leader-def
+    ;     "(my-leader-def" n>
+    ;     ":states '(" (p "states") ")" n>
+    ;     ":keymaps '" (p "keymap") n>
+    ;     "\"" (p "key") "\" '(\"" (p "desc") "\" . " (p "action") ")" n>
+    ;     r> ")")
+    ;    (my-leader-key
+    ;     "\"" (p "key") "\" '(\"" (p "label") "\" . " (p "action") ")" n>)))
+
+    ;(use-package tempel
+    ;  :ensure t
+    ;  :general
+    ;  (:states '(insert normal)
+    ;           "M-+" 'tempel-complete
+    ;           "M-*" 'tempel-insert)
+    ;  :init
+    ;  (defun tempel-setup-capf ()
+    ;    (add-hook 'completion-at-point-functions #'tempel-complete nil 'local))
+
+    ;  (add-hook 'conf-mode-hook 'tempel-setup-capf)
+    ;  (add-hook 'prog-mode-hook 'tempel-setup-capf)
+    ;  (add-hook 'text-mode-hook 'tempel-setup-capf)
+    ;  (add-hook 'org-mode-hook 'tempel-setup-capf)
+    ;  :config
+    ;  (add-to-list 'tempel-template-sources 'my/tempel-templates))
+
+    ;(use-package tempel-collection
+    ;  :ensure t)
+  (use-package yasnippet
+      :ensure t
+      :general
+      (:states '(insert normal)
+               "M-+" 'yas-expand
+               "M-*" 'yas-insert-snippet)
+      :config
+      (add-to-list 'yas-snippet-dirs "@snippets@")
+      (yas-reload-all)
+      (yas-global-mode 1))
+
+  (use-package yasnippet-snippets
+    :ensure t)
+#+end_src
+
+#+RESULTS:
+
 ** Fold regions like in vim
 #+begin_src emacs-lisp
 (use-package vimish-fold
@@ -60,58 +156,55 @@ We are going to turn off the startup message, enable a bell for when we hit file
   :config
   (global-evil-vimish-fold-mode))
 #+end_src
+
+** Make popups more usable
+#+begin_src emacs-lisp
+  (use-package popper
+    :ensure t ; or :straight t
+    :general
+    (:states '(normal insert)
+     ("C-`" 'popper-toggle
+      "M-`"   'popper-cycle
+      "C-M-`" 'popper-toggle-type))
+    :init
+    (setq popper-reference-buffers
+          '("\\*Messages\\*"
+            "\\*Warnings\\*"
+            "Output\\*$"
+            "\\*Async Shell Command\\*"
+            help-mode
+            compilation-mode))
+    (popper-mode +1)
+    (popper-echo-mode +1))   
+#+end_src
+
 * Theme
 #+begin_src emacs-lisp
   (load-theme 'modus-vivendi t)
 #+end_src
 
-* EVIL mode
-#+begin_src emacs-lisp
-  (use-package evil
-    :ensure t ;; install the evil package if not installed
-    :init ;; tweak evil's configuration before loading it
-    (setq evil-respect-visual-line-mode t)
-    (setq evil-search-module 'evil-search)
-    (setq evil-ex-complete-emacs-commands nil)
-    (setq evil-vsplit-window-right t)
-    (setq evil-split-window-below t)
-    (setq evil-shift-round nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-keybinding nil)
-    :config ;; tweak evil after loading it
-    (evil-mode))
-  #+end_src
-  ** EVIL keybindings with ~general.el~
-  This is where we define EVIL keybinds which are just so much better for text editing, if a little worse for accessing Emacs' more advanced functionality.
-  #+begin_src emacs-lisp
-    (use-package general
-      :ensure t
-      :config
-      (general-auto-unbind-keys))
-    (general-create-definer my-leader-def
-      ;; :prefix my-leader
-      :prefix "SPC")
-    (my-leader-def 'normal 'global
-      "g" '("Games" . (keymap))
-      "g t" '("Tetris" . tetris))
-
-    (general-create-definer my-local-leader-def
-      ;; :prefix my-local-leader
-      :prefix "SPC m")
-  #+end_src
-
 * Org mode
+~%dep%+{texliveBasic}~
 #+begin_src emacs-lisp
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((dot . t))) ; this line activates dot
+(setq org-latex-create-formula-image-program 'dvisvgm)
+;; (setq org-format-latex-options
+;;       (plist-put org-format-latex-options :scale 1.5))
+
+;; Ensure babel languages are loaded after Org is ready
+(with-eval-after-load 'org
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((dot . t)      ; activates dot
+     (latex . t)))) ; activates latex
 #+end_src
+
 ** Hunspell
 #+begin_src emacs-lisp
 (setq
  ispell-program-name
  "@hunspell@")
 #+end_src
+
 ** Graphviz
 Add the Graphviz package and make it so inline images render correctly when evaluating graphviz dot code. Graphviz is added to loaded languages above.
 ~%dep%+{graphviz-nox}~
@@ -121,191 +214,186 @@ Add the Graphviz package and make it so inline images render correctly when eval
 (add-hook 'org-babel-after-execute-hook 'my/fix-inline-images)
 #+end_src
 
+** Inkscape compat
+~%dep%+{inkscape}~
+#+begin_src emacs-lisp
+  (use-package ink
+    :ensure nil)
+#+end_src
+
+** PDF Reader
+#+begin_src emacs-lisp
+  (use-package reader
+    :ensure nil)
+#+end_src
+
 * Language Configuration
 ** LSP
 #+begin_src emacs-lisp
-(use-package lsp-mode
-  :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "C-c l")
-  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         (rust-mode . lsp)
-         ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp)
+  (use-package lsp-mode
+    :init
+    ;(setq lsp-keymap-prefix "C-c l")
+    (setq lsp-completion-provider :none)
 
-;; optionally
-(use-package lsp-ui :commands lsp-ui-mode)
-;; if you are helm user
-                                        ;(use-package helm-lsp :commands helm-lsp-workspace-symbol)
-;; if you are ivy user
-                                        ;(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+           (rust-mode . lsp)
+           (slint-mode . lsp)
+           ;; if you want which-key integration
+           (lsp-mode . lsp-enable-which-key-integration))
+    :commands lsp
+    :config
+    (my-leader-def 
+      :states '(normal)
+      :keymaps 'lsp-mode-map
+      "l" '("LSP" . (keymap))
+      "l w" '("Workspaces" . (keymap))
+      "l w s" '("Start Server" . lsp)
+      "l w r" '("Restart Server" . lsp-workspace-restart)
+      "l w q" '("Shutdown Server" . lsp-workspace-shutdown)
+      "l w d" '("Describe Session" . lsp-describe-session)
+      "l w D" '("Disconnect Buffer From Server" . lsp-disconnect)
+      "l =" '("Format" . (keymap))
+      "l = =" '("Format Buffer" . lsp-format-buffer)
+      "l = r" '("Format Region" . lsp-format-region)
+      "l F" '("Folders" . (keymap))
+      "l F a" '("Add To Workspaces" . lsp-workspace-folders-add)
+      "l F r" '("Remove From Workspaces" . lsp-workspace-folders-remove)
+      "l F b" '("Remove From Workspace Blocklist" . lsp-workspace-blocklist-remove)
+      "l T" '("Toggle" . (keymap))
+      "l T l" '("Toggle Lenses" . lsp-lens-mode)
+      "l T L" '("Toggle Log IO" . lsp-toggle-trace-io)
+      "l T h" '("Toggle Highlighting" . lsp-toggle-symbol-highlight)
+      "l T S" '("Toggle Sideline" . lsp-ui-sideline-mode)
+      "l T d" '("Toggle Docs pop-up" . lsp-ui-doc-mode)
+      "l T s" '("Toggle Signature" . lsp-toggle-signature-auto-activate)
+      "l T f" '("Toggle On Type Formatting" . lsp-toggle-on-type-formatting)
+      "l T T" '("Toggle Treemacs Integration" . lsp-treemacs-sync-mode)
+      "l g" '("Goto" . (keymap))
+      "l g a" '("Find Symbol In Workspace" . xref-find-apropos)
+      "l g d" '("Find Declarations" . lsp-find-declaration)
+      "l g e" '("Show Errors" . lsp-treemacs-errors-list)
+      "l g g" '("Find Definitions" . lsp-find-definition)
+      "l g h" '("Call Hierarchy" . lsp-treemacs-call-hierarchy)
+      "l g i" '("Find Implementations" . lsp-find-implementation)
+      "l g r" '("Find References" . lsp-find-references)
+      "l g t" '("Find Type Definition" . lsp-find-type-definition)
+      "l h" '("Help" . (keymap))
+      "l h g" '("Glance Symbol" . lsp-ui-doc-glance)
+      "l h h" '("Describe Symbol At Point" . lsp-describe-thing-at-point)
+      "l h s" '("Signature Help" . lsp-signature-activate)
+      "l r" '("Refactor" . (keymap))
+      "l r r" '("Rename" . lsp-rename)
+      "l r o" '("Organize Imports" . lsp-organize-imports)
+      "l a" '("Code Actions" . (keymap))
+      "l a a" '("Code Actions" . lsp-execute-code-action)
+      "l a h" '("Highlight Symbol" . lsp-document-highlight)
+      "l G" '("Peek" . (keymap))
+      "l G g" '("Peek Definitions" . lsp-ui-peek-find-definitions)
+      "l G i" '("Peek Implementations" . lsp-ui-peek-find-implementation)
+      "l G r" '("Peek References" . lsp-ui-peek-find-references)
+      "l G s" '("Peek Workspace Symbol" . lsp-ui-peek-find-workspace-symbol)))
 
-;; optionally if you want to use debugger
-(use-package dap-mode)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+  ;; optionally
+  (use-package lsp-ui :commands lsp-ui-mode)
+  (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
-;; optional if you want which-key integration
-(use-package which-key
-  :config
-  (which-key-mode))
+  ;; optionally if you want to use debugger
+  (use-package dap-mode)
+  (use-package dap-gdb)
+  ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+
+  ;; optional if you want which-key integration
+  (use-package which-key
+    :config
+    (which-key-mode))
 #+end_src
+
 ** Completion
 I am doing completion using the lovely Corfu
 #+begin_src emacs-lisp
   (use-package corfu
-    :ensure t
-    :init
-    (global-corfu-mode)
-    :general
-    (:keymaps 'corfu-map
-     "RET"     nil
-     "TAB"     nil
-     "C-j"     #'corfu-next
-     "C-k"     #'corfu-previous
-     "C-y"     #'corfu-insert
-     "M-j"     #'corfu-scroll-down
-     "M-k"     #'corfu-scroll-up
-     "M-d"     #'corfu-info-documentation
-     "M-l"     #'corfu-info-location
-     "<escape>" #'corfu-quit)
-    :config
-    (setq corfu-auto t
-          corfu-auto-delay 0
-          corfu-auto-trigger "."
-          corfu-quit-no-match 'separator
-          corfu-popupinfo-delay 0)
-    (corfu-history-mode)
-    (corfu-popupinfo-mode)
-    ;; This is some attrocious AI generated slop code that does somehow fixy my issue lol. For some reason corfu failed to override evils keybinds (like C-k) and this fixed it.
-    (with-eval-after-load 'corfu
-      (defvar corfu-evil-emulation-map-alist
-        '((corfu--popup-visible-p . corfu-map)))
-      (defvar-local corfu-evil--saved-emulation-mode-map-alists nil)
-      (defun corfu-evil--emulation-activate (&rest _)
-        (setq corfu-evil--saved-emulation-mode-map-alists
-              emulation-mode-map-alists)
-        (setq-local emulation-mode-map-alists
-                    (cons 'corfu-evil-emulation-map-alist
-                          (delq 'corfu-evil-emulation-map-alist
-                                emulation-mode-map-alists))))
-      (defun corfu-evil--emulation-deactivate (&rest _)
-        (when corfu-evil--saved-emulation-mode-map-alists
-          (setq-local emulation-mode-map-alists
-                      corfu-evil--saved-emulation-mode-map-alists)
-          (setq corfu-evil--saved-emulation-mode-map-alists nil)))
-      (advice-add 'corfu--popup-show :after #'corfu-evil--emulation-activate)
-      (advice-add 'corfu--popup-hide :after #'corfu-evil--emulation-deactivate)
-      (advice-add 'corfu--teardown :after #'corfu-evil--emulation-deactivate))
-    )
-   
-
-   ;(use-package corfu
-   ;  :ensure t
-   ;  :init
-   ;  (setq corfu-auto t
-   ;        corfu-auto-delay 0
-   ;        corfu-auto-trigger "."
-   ;        corfu-quit-no-match 'separator
-   ;        corfu-popupinfo-delay 0)
-   ;  (global-corfu-mode)
-   ;  (corfu-history-mode)
-   ;  (corfu-popupinfo-mode)
-   ;  ;; Keybindings (Using General.el syntax)
-   ;  ;;:general-config
-   ;  ;;(:state 'insert
-   ;  ;; :keymaps 'corfu-map
-   ;  ;; "C-j"      'corfu-next
-   ;  ;; "M-j"      'corfu-scroll-down
-   ;  ;; "C-k"      'corfu-previous
-   ;  ;; "M-k"      'corfu-scroll-up
-   ;  ;; "<escape>" 'corfu-quit
-   ;  ;; "C-y"      'corfu-insert
-   ;  ;; "M-d"      'corfu-info-documentation
-   ;  ;; "M-l"      'corfu-info-location)
-
-   ;  ;; Configuration and Evil Integration
-   ;  :config
-   ;  (evil-make-overriding-map corfu-map)
-   ;  (with-eval-after-load 'evil
-   ;      (evil-define-key 'insert corfu-map
-   ;        (kbd "C-j")      'corfu-next
-   ;        (kbd "C-k")      'corfu-previous
-   ;        (kbd "C-y")      'corfu-insert
-   ;        (kbd "M-j")      'corfu-scroll-down
-   ;        (kbd "M-k")      'corfu-scroll-up
-   ;        (kbd "M-d")      'corfu-info-documentation
-   ;        (kbd "M-l")      'corfu-info-location
-   ;        (kbd "<escape>") 'corfu-quit
-   ;        (kbd "RET")      nil
-   ;        (kbd "TAB")      nil))
-   ;      ;(general-def
-   ;      ; :states 'insert
-   ;      ; :keymaps 'corfu-map
-   ;      ;   "C-j"      'corfu-next
-   ;      ;   "M-j"      'corfu-scroll-down
-   ;      ;   "C-k"      'corfu-previous
-   ;      ;   "M-k"      'corfu-scroll-up
-   ;      ;   "<escape>" 'corfu-quit
-   ;      ;   "C-y"      'corfu-insert
-   ;      ;   "M-d"      'corfu-info-documentation
-   ;      ;   "M-l"      'corfu-info-location
-   ;      ;   "RET"      nil
-   ;      ;   "TAB"      nil)
-   ;      ;; Explicitly unbind keys
-   ; (keymap-set corfu-map "RET" nil)
-   ; (keymap-set corfu-map "TAB" nil))
+     :ensure t
+     :demand t
+     :general
+     (:states 'insert :keymaps 'corfu-map
+               "RET"     nil
+               "TAB"     nil
+               "C-j"     #'corfu-next
+               "C-k"     #'corfu-previous
+               "C-y"     #'corfu-insert
+               "M-j"     #'corfu-scroll-down
+               "M-k"     #'corfu-scroll-up
+               "M-d"     #'corfu-info-documentation
+               "M-l"     #'corfu-info-location
+               "<escape>" #'corfu-quit)
+     :init
+     (setq corfu-auto t
+           corfu-auto-delay 0
+           corfu-auto-prefix 1
+           corfu-quit-no-match 'separator
+           corfu-popupinfo-delay 0
+           text-mode-ispell-word-completion nil)
+      
+     :config
+     (global-corfu-mode)
+     (corfu-history-mode)
+     (corfu-popupinfo-mode)
+     (advice-add 'corfu--setup :after (lambda (&rest _) (evil-normalize-keymaps)))
+     (advice-add 'corfu--teardown :after (lambda (&rest _) (evil-normalize-keymaps))))
   #+end_src
 
   #+begin_src emacs-lisp
-      ;; A few more useful configurations...
-    (use-package emacs
-      :custom
-      ;; TAB cycle if there are only few candidates
-      ;; (completion-cycle-threshold 3)
+          ;; A few more useful configurations...
+        (use-package emacs
+          :custom
+          ;; TAB cycle if there are only few candidates
+          ;; (completion-cycle-threshold 3)
 
-      ;; Enable indentation+completion using the TAB key.
-      ;; `completion-at-point' is often bound to M-TAB.
-      (tab-always-indent 'complete)
-      (completion-cycle-threshold nil)      ; Always show all candidates in popup menu
+          ;; Enable indentation+completion using the TAB key.
+          ;; `completion-at-point' is often bound to M-TAB.
+          (tab-always-indent 'complete)
+          (completion-cycle-threshold nil)      ; Always show all candidates in popup menu
 
 
-      ;; Emacs 30 and newer: Disable Ispell completion function.
-      ;; Try `cape-dict' as an alternative.
-      (text-mode-ispell-word-completion nil)
+          ;; Emacs 30 and newer: Disable Ispell completion function.
+          ;; Try `cape-dict' as an alternative.
+          (text-mode-ispell-word-completion nil)
 
-      ;; Hide commands in M-x which do not apply to the current mode.  Corfu
-      ;; commands are hidden, since they are not used via M-x. This setting is
-      ;; useful beyond Corfu.
-      (read-extended-command-predicate #'command-completion-default-include-p))
-      ;; Add extensions
-
+          ;; Hide commands in M-x which do not apply to the current mode.  Corfu
+          ;; commands are hidden, since they are not used via M-x. This setting is
+          ;; useful beyond Corfu.
+          (read-extended-command-predicate #'command-completion-default-include-p))
+          ;; Add extensions
     (use-package cape
-      ;; Bind prefix keymap providing all Cape commands under a mnemonic key.
-      ;; Press C-c p ? to for help.
-      :bind ("C-c p" . cape-prefix-map) ;; Alternative key: M-<tab>, M-p, M-+
-      ;; Alternatively bind Cape commands individually.
-      ;; :bind (("C-c p d" . cape-dabbrev)
-      ;;        ("C-c p h" . cape-history)
-      ;;        ("C-c p f" . cape-file)
-      ;;        ...)
+      :bind ("C-c p" . cape-prefix-map)
       :init
-      ;; Add to the global default value of `completion-at-point-functions' which is
-      ;; used by `completion-at-point'.  The order of the functions matters, the
-      ;; first function returning a result wins.  Note that the list of buffer-local
-      ;; completion functions takes precedence over the global list.
       (add-hook 'completion-at-point-functions #'cape-dabbrev)
       (add-hook 'completion-at-point-functions #'cape-file)
       (add-hook 'completion-at-point-functions #'cape-elisp-block)
       (add-hook 'completion-at-point-functions #'cape-keyword)
       (add-hook 'completion-at-point-functions #'cape-emoji)
       (add-hook 'completion-at-point-functions #'cape-dict)
-      (add-hook 'completion-at-point-functions #'cape-history))
-      ;; ... 
+      (add-hook 'completion-at-point-functions #'cape-history)
+     ;(defun my/lsp-corfu-setup ()
+     ;  (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+     ;        '(orderless))
+     ;  (setq-local completion-at-point-functions
+     ;              (list (cape-capf-super
+     ;                     #'tempel-complete
+     ;                     (cape-capf-noninterruptible #'lsp-completion-at-point)
+     ;                     #'cape-dabbrev)
+     ;                    #'cape-file)))
+     ;(add-hook 'lsp-completion-mode-hook #'my/lsp-corfu-setup))
+     (defun my/lsp-corfu-setup ()
+             (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+                   '(orderless))
+             (setq-local completion-at-point-functions
+                         (list (cape-capf-super
+                                (cape-capf-noninterruptible #'lsp-completion-at-point)
+                                #'cape-dabbrev)
+                               #'cape-file)))
+     (add-hook 'lsp-completion-mode-hook #'my/lsp-corfu-setup))
 #+end_src
-
-#+RESULTS:
 
 ** Nix
 #+begin_src emacs-lisp
@@ -327,154 +415,183 @@ I am doing completion using the lovely Corfu
 The rust toolchain package is defined in =flake.nix=.
 ~%dep%+{gcc}~
 #+begin_src emacs-lisp
-(defun sp1ff/rust/mode-hook ()
-  "My rust-mode hook"
-  ;; Style per the Rust Style Guide:
-  ;; <https://github.com/rust-lang-nursery/fmt-rfcs/blob/master/guide/guide.md>
-  (setq indent-tabs-mode nil
-        tab-width 4
-        c-basic-offset 4
-        fill-column 100))
+  (defun sp1ff/rust/mode-hook ()
+    "My rust-mode hook"
+    ;; Style per the Rust Style Guide:
+    ;; <https://github.com/rust-lang-nursery/fmt-rfcs/blob/master/guide/guide.md>
+    (setq dap-gdb-debug-program '("rust-gdb" "-i" "dap"))
+    (setq indent-tabs-mode nil
+          tab-width 4
+          c-basic-offset 4
+          fill-column 100))
 
-(use-package rust-mode
-  :ensure t
-  :hook (rust-mode . sp1ff/rust/mode-hook)
-  :config
-  (let ((dot-cargo-bin (expand-file-name "@rust-toolchain@/bin/")))
-    (setq rust-rustfmt-bin (concat dot-cargo-bin "rustfmt")
-          rust-cargo-bin (concat dot-cargo-bin "cargo")
-          rust-format-on-save t))
-  )
+  (use-package rust-mode
+    :ensure t
+    :hook (rust-mode . sp1ff/rust/mode-hook)
+    :config
+    (let ((dot-cargo-bin (expand-file-name "@rust-toolchain@/bin/")))
+      (setq rust-rustfmt-bin (concat dot-cargo-bin "rustfmt")
+            rust-cargo-bin (concat dot-cargo-bin "cargo")
+            rust-format-on-save nil))
+    )
 #+end_src
 
+** Slint
+~%dep%+{slint-lsp}~
+#+begin_src emacs-lisp
+  (use-package slint-mode)
+#+end_src
 
 * Modern minibuffer packages
 #+begin_src emacs-lisp
-;; The `vertico' package applies a vertical layout to the minibuffer.
-;; It also pops up the minibuffer eagerly so we can see the available
-;; options without further interactions.  This package is very fast
-;; and "just works", though it also is highly customisable in case we
-;; need to modify its behaviour.
-;;
-;; Further reading: https://protesilaos.com/emacs/dotemacs#h:cff33514-d3ac-4c16-a889-ea39d7346dc5
-(use-package vertico
-  :ensure t
-  :config
-  (setq vertico-cycle t)
-  (setq vertico-resize nil)
-  (vertico-mode 1))
+  ;; The `vertico' package applies a vertical layout to the minibuffer.
+  ;; It also pops up the minibuffer eagerly so we can see the available
+  ;; options without further interactions.  This package is very fast
+  ;; and "just works", though it also is highly customisable in case we
+  ;; need to modify its behaviour.
+  ;;
+  ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:cff33514-d3ac-4c16-a889-ea39d7346dc5
+  (use-package vertico
+    :ensure t
+    :config
+    (setq vertico-cycle t)
+    (setq vertico-resize nil)
+    (vertico-mode 1))
 
-;; The `marginalia' package provides helpful annotations next to
-;; completion candidates in the minibuffer.  The information on
-;; display depends on the type of content.  If it is about files, it
-;; shows file permissions and the last modified date.  If it is a
-;; buffer, it shows the buffer's size, major mode, and the like.
-;;
-;; Further reading: https://protesilaos.com/emacs/dotemacs#h:bd3f7a1d-a53d-4d3e-860e-25c5b35d8e7e
-(use-package marginalia
-  :ensure t
-  :config
-  (marginalia-mode 1))
+  ;; The `marginalia' package provides helpful annotations next to
+  ;; completion candidates in the minibuffer.  The information on
+  ;; display depends on the type of content.  If it is about files, it
+  ;; shows file permissions and the last modified date.  If it is a
+  ;; buffer, it shows the buffer's size, major mode, and the like.
+  ;;
+  ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:bd3f7a1d-a53d-4d3e-860e-25c5b35d8e7e
+  (use-package marginalia
+    :ensure t
+    :config
+    (marginalia-mode 1))
 
-;; The `orderless' package lets the minibuffer use an out-of-order
-;; pattern matching algorithm.  It matches space-separated words or
-;; regular expressions in any order.  In its simplest form, something
-;; like "ins pac" matches `package-menu-mark-install' as well as
-;; `package-install'.  This is a powerful tool because we no longer
-;; need to remember exactly how something is named.
-;;
-;; Note that Emacs has lots of "completion styles" (pattern matching
-;; algorithms), but let us keep things simple.
-;;
-;; Further reading: https://protesilaos.com/emacs/dotemacs#h:7cc77fd0-8f98-4fc0-80be-48a758fcb6e2
-(use-package orderless
-  :ensure t
-  :config
-  (setq completion-styles '(orderless basic)))
+  ;; The `orderless' package lets the minibuffer use an out-of-order
+  ;; pattern matching algorithm.  It matches space-separated words or
+  ;; regular expressions in any order.  In its simplest form, something
+  ;; like "ins pac" matches `package-menu-mark-install' as well as
+  ;; `package-install'.  This is a powerful tool because we no longer
+  ;; need to remember exactly how something is named.
+  ;;
+  ;; Note that Emacs has lots of "completion styles" (pattern matching
+  ;; algorithms), but let us keep things simple.
+  ;;
+  ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:7cc77fd0-8f98-4fc0-80be-48a758fcb6e2
+  (use-package orderless
+    :ensure t
+    :config
+    (setq completion-styles '(orderless basic)))
 
-;; The `consult' package provides lots of commands that are enhanced
-;; variants of basic, built-in functionality.  One of the headline
-;; features of `consult' is its preview facility, where it shows in
-;; another Emacs window the context of what is currently matched in
-;; the minibuffer.  Here I define key bindings for some commands you
-;; may find useful.  The mnemonic for their prefix is "alternative
-;; search" (as opposed to the basic C-s or C-r keys).
-;;
-;; Further reading: https://protesilaos.com/emacs/dotemacs#h:22e97b4c-d88d-4deb-9ab3-f80631f9ff1d
-(use-package consult
-  :ensure t
-  :bind (;; A recursive grep
-         ("M-s M-g" . consult-grep)
-         ;; Search for files names recursively
-         ("M-s M-f" . consult-find)
-         ;; Search through the outline (headings) of the file
-         ("M-s M-o" . consult-outline)
-         ;; Search the current buffer
-         ("M-s M-l" . consult-line)
-         ;; Switch to another buffer, or bookmarked file, or recently
-         ;; opened file.
-         ("M-s M-b" . consult-buffer)
-         ("C-x b" . consult-buffer)))
+  ;; The `consult' package provides lots of commands that are enhanced
+  ;; variants of basic, built-in functionality.  One of the headline
+  ;; features of `consult' is its preview facility, where it shows in
+  ;; another Emacs window the context of what is currently matched in
+  ;; the minibuffer.  Here I define key bindings for some commands you
+  ;; may find useful.  The mnemonic for their prefix is "alternative
+  ;; search" (as opposed to the basic C-s or C-r keys).
+  ;;
+  ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:22e97b4c-d88d-4deb-9ab3-f80631f9ff1d
+  (use-package consult
+    :ensure t
+    :config
+    (my-leader-def
+      :states '(normal)
+      :keymaps 'keymap
+      "f" '("Find" . keymap)
+      "f g" '("Recursive Grep" . 'consult-grep)
+      "f f" '("Recursive File Name Search" . 'consult-find))
 
-;; The `embark' package lets you target the thing or context at point
-;; and select an action to perform on it.  Use the `embark-act'
-;; command while over something to find relevant commands.
-;;
-;; When inside the minibuffer, `embark' can collect/export the
-;; contents to a fully fledged Emacs buffer.  The `embark-collect'
-;; command retains the original behaviour of the minibuffer, meaning
-;; that if you navigate over the candidate at hit RET, it will do what
-;; the minibuffer would have done.  In contrast, the `embark-export'
-;; command reads the metadata to figure out what category this is and
-;; places them in a buffer whose major mode is specialised for that
-;; type of content.  For example, when we are completing against
-;; files, the export will take us to a `dired-mode' buffer; when we
-;; preview the results of a grep, the export will put us in a
-;; `grep-mode' buffer.
-;;
-;; Further reading: https://protesilaos.com/emacs/dotemacs#h:61863da4-8739-42ae-a30f-6e9d686e1995
-(use-package embark
-  :ensure t
-  :bind (("C-." . embark-act)
-         :map minibuffer-local-map
-         ("C-c C-c" . embark-collect)
-         ("C-c C-e" . embark-export))
-  :config (with-eval-after-load 'evil
-    	    (define-key evil-normal-state-map (kbd "C-.") 'embark-act)
-    	    (define-key evil-visual-state-map (kbd "C-.") 'embark-act)
-            ;; Add other states if necessary (insert, motion, etc.)
-            (evil-define-key 'normal 'global (kbd "C-.") 'embark-act)))
+    :general ;; A recursive grep
+    ("M-s M-g" 'consult-grep
+     ;; Search for files names recursively
+     "M-s M-f" 'consult-find
+     ;; search through the outline (headings) of the file
+     "M-s M-o" 'consult-outline
+     ;; Search the current buffer
+     "M-s M-l" 'consult-line
+     ;; Switch to another buffer, or bookmarked file, or recently
+     ;; opened file.
+     "M-s M-b" 'consult-buffer
+     "C-x b" 'consult-buffer))
 
-;; The `embark-consult' package is glue code to tie together `embark'
-;; and `consult'.
-(use-package embark-consult
-  :ensure t)
+  ;; The `embark' package lets you target the thing or context at point
+  ;; and select an action to perform on it.  Use the `embark-act'
+  ;; command while over something to find relevant commands.
+  ;;
+  ;; When inside the minibuffer, `embark' can collect/export the
+  ;; contents to a fully fledged Emacs buffer.  The `embark-collect'
+  ;; command retains the original behaviour of the minibuffer, meaning
+  ;; that if you navigate over the candidate at hit RET, it will do what
+  ;; the minibuffer would have done.  In contrast, the `embark-export'
+  ;; command reads the metadata to figure out what category this is and
+  ;; places them in a buffer whose major mode is specialised for that
+  ;; type of content.  For example, when we are completing against
+  ;; files, the export will take us to a `dired-mode' buffer; when we
+  ;; preview the results of a grep, the export will put us in a
+  ;; `grep-mode' buffer.
+  ;;
+  ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:61863da4-8739-42ae-a30f-6e9d686e1995
+  (use-package embark
+    :ensure t
+    :general
+    (:states '(normal)
+             "C-." 'embark-act)
+     
+    (:keymaps 'minibuffer-local-map
+              "C-c C-c" #'embark-collect
+              "C-c C-e" #'embark-export)
+    :config
+    (with-eval-after-load 'evil))
+      
+  ;;(define-key evil-normal-state-map (kbd "C-.") 'embark-act)
+  ;;(define-key evil-visual-state-map (kbd "C-.") 'embark-act)
+      ;;;; Add other states if necessary (insert, motion, etc.)
+  ;;(evil-define-key 'normal 'global (kbd "C-.") 'embark-act)))
 
-;; The `wgrep' packages lets us edit the results of a grep search
-;; while inside a `grep-mode' buffer.  All we need is to toggle the
-;; editable mode, make the changes, and then type C-c C-c to confirm
-;; or C-c C-k to abort.
-;;
-;; Further reading: https://protesilaos.com/emacs/dotemacs#h:9a3581df-ab18-4266-815e-2edd7f7e4852
-(use-package wgrep
-  :ensure t
-  :bind ( :map grep-mode-map
-          ("e" . wgrep-change-to-wgrep-mode)
-          ("C-x C-q" . wgrep-change-to-wgrep-mode)
-          ("C-c C-c" . wgrep-finish-edit)))
 
-;; The built-in `savehist-mode' saves minibuffer histories.  Vertico
-;; can then use that information to put recently selected options at
-;; the top.
-;;
-;; Further reading: https://protesilaos.com/emacs/dotemacs#h:25765797-27a5-431e-8aa4-cc890a6a913a
-(savehist-mode 1)
+  ;; The `embark-consult' package is glue code to tie together `embark'
+  ;; and `consult'.
+  (use-package embark-consult
+    :ensure t)
 
-;; The built-in `recentf-mode' keeps track of recently visited files.
-;; You can then access those through the `consult-buffer' interface or
-;; with `recentf-open'/`recentf-open-files'.
-;;
-;; I do not use this facility, because the files I care about are
-;; either in projects or are bookmarked.
-(recentf-mode 1)
+  ;; The `wgrep' packages lets us edit the results of a grep search
+  ;; while inside a `grep-mode' buffer.  All we need is to toggle the
+  ;; editable mode, make the changes, and then type C-c C-c to confirm
+  ;; or C-c C-k to abort.
+  ;;
+  ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:9a3581df-ab18-4266-815e-2edd7f7e4852
+  (use-package wgrep
+    :ensure t
+    :bind ( :map grep-mode-map
+            ("e" . wgrep-change-to-wgrep-mode)
+            ("C-x C-q" . wgrep-change-to-wgrep-mode)
+            ("C-c C-c" . wgrep-finish-edit)))
+
+  ;; The built-in `savehist-mode' saves minibuffer histories.  Vertico
+  ;; can then use that information to put recently selected options at
+  ;; the top.
+  ;;
+  ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:25765797-27a5-431e-8aa4-cc890a6a913a
+  (savehist-mode 1)
+
+  ;; The built-in `recentf-mode' keeps track of recently visited files.
+  ;; You can then access those through the `consult-buffer' interface or
+  ;; with `recentf-open'/`recentf-open-files'.
+  ;;
+  ;; I do not use this facility, because the files I care about are
+  ;; either in projects or are bookmarked.
+  (recentf-mode 1)
+#+end_src
+
+
+* Direnv
+#+begin_src emacs-lisp
+(use-package direnv
+ :ensure t
+ :config
+ (direnv-mode))
 #+end_src

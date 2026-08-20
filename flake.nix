@@ -6,13 +6,21 @@
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
     emacs-overlay = {
-      url = "github:/nix-community/emacs-overlay";
+      url = "github:nix-community/emacs-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+    ink = {
+      url = "github:foxfriday/ink";
+      flake = false;
+    };
+    emacs-reader = {
+      url = "git+https://codeberg.org/MonadicSheep/emacs-reader.git";
+      flake = false;
     };
   };
 
   outputs =
-    {
+    inputs@{
       nixpkgs,
       flake-utils,
       emacs-overlay,
@@ -73,6 +81,7 @@
               username = "mrhappy200";
               hunspell = "${pkgs.lib.getExe pkgs.hunspell}";
               rust-toolchain = "${rust-toolchain}";
+              snippets = "${./snippets}";
             };
           };
 
@@ -108,7 +117,31 @@
           # language servers, formatters, etc)
           extraEmacsPackages = epkgs: [
             epkgs.cask
+            (epkgs.trivialBuild {
+              pname = "ink";
+              version = "unstable";
+              src = inputs.ink;
+            })
+            (pkgs.stdenv.mkDerivation {
+              pname = "emacs-reader";
+              version = "unstable";
+              src = inputs.emacs-reader;
 
+              nativeBuildInputs = [
+                pkgs.pkg-config
+                pkgs.emacs
+              ];
+              buildInputs = [ pkgs.mupdf ];
+
+              buildPhase = ''
+                make all
+              '';
+
+              installPhase = ''
+                mkdir -p $out/share/emacs/site-lisp
+                cp *.el *.so $out/share/emacs/site-lisp/
+              '';
+            })
           ];
         };
         myWrappedEmacs = pkgs.symlinkJoin {
@@ -120,9 +153,9 @@
             in
             ''
               wrapProgram $out/bin/emacs \
-                --prefix PATH : ${pkgs.lib.makeBinPath buildInputs}
+              --prefix PATH : ${pkgs.lib.makeBinPath buildInputs}
               wrapProgram $out/bin/emacsclient \
-                --prefix PATH : ${pkgs.lib.makeBinPath buildInputs}
+              --prefix PATH : ${pkgs.lib.makeBinPath buildInputs}
             '';
         };
       in

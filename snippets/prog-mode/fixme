@@ -1,0 +1,4 @@
+# name: fixme
+# key: fixme
+# --
+`(if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)`FIXME $0

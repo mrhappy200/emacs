@@ -21,6 +21,22 @@
         "type": "github"
       }
     },
+    "emacs-reader": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783150608,
+        "narHash": "sha256-fpmcVO7IS0oop2zOWzMngC6nSTmYoi1vRUbhV3PQMGk=",
+        "ref": "refs/heads/master",
+        "rev": "87b193d6996093530ab01cb0314c4d23b9777057",
+        "revCount": 869,
+        "type": "git",
+        "url": "https://codeberg.org/MonadicSheep/emacs-reader.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://codeberg.org/MonadicSheep/emacs-reader.git"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -36,6 +52,22 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "ink": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784850010,
+        "narHash": "sha256-FiC3BUEEveBZ1UvR4e4YUgqn9oNyT991jVI7FviHbDI=",
+        "owner": "foxfriday",
+        "repo": "ink",
+        "rev": "4774bc1940be3bea8903f5a717c51fc804218355",
+        "type": "github"
+      },
+      "original": {
+        "owner": "foxfriday",
+        "repo": "ink",
         "type": "github"
       }
     },
@@ -90,7 +122,9 @@
     "root": {
       "inputs": {
         "emacs-overlay": "emacs-overlay",
+        "emacs-reader": "emacs-reader",
         "flake-utils": "flake-utils",
+        "ink": "ink",
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay"
       }

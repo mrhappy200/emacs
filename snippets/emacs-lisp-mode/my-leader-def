@@ -1,0 +1,7 @@
+# name: my-leader-def
+# key: my-leader-def
+# --
+(my-leader-def
+  :states '($1)
+  :keymaps '$2
+  "$3" '("$4" . $0))
