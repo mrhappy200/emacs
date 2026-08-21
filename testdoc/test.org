@@ -4,5 +4,3 @@
 
 * Ink.el testing
 A figure explaining the way my figure creation process works follows.
-#+NAME: fig:firsttest
-[[file:figures/FirstTest.png]]
