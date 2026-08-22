@@ -10,7 +10,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     ink = {
-      url = "github:foxfriday/ink";
+      url = "file://ink";
       flake = false;
     };
     emacs-reader = {

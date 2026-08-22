@@ -1,6 +1,5 @@
 #+title: My(@username@) Emacs configuration
 #+PROPERTY: header-args:emacs-lisp :tangle yes :comments link
-#+PROPERTY: header-args :eval yes
 
 This is the syntax I use for adding dependencies in the file. Sadly it does use IFD (I think....). That having been said, so does emacs-overlay so I think it is fine untill dynamic derivations gets introduced. Note that it cannot be commented out because my parsing regex is rather naïve, his code block does actually install sl (choo-choo).
 ~%dep%+{sl}~
@@ -259,83 +258,88 @@ Add the Graphviz package and make it so inline images render correctly when eval
 * Language Configuration
 ** LSP
 #+begin_src emacs-lisp
-  (use-package lsp-mode
-    :init
+  ; Set nil as an addon
+    (use-package lsp-mode
+     :init
     ;(setq lsp-keymap-prefix "C-c l")
-    (setq lsp-completion-provider :none)
+     (setq lsp-completion-provider :none)
 
-    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-           (rust-mode . lsp)
-           (slint-mode . lsp)
-           ;; if you want which-key integration
-           (lsp-mode . lsp-enable-which-key-integration))
-    :commands lsp
-    :config
-    (my-leader-def 
-      :states '(normal)
-      :keymaps 'lsp-mode-map
-      "l" '("LSP" . (keymap))
-      "l w" '("Workspaces" . (keymap))
-      "l w s" '("Start Server" . lsp)
-      "l w r" '("Restart Server" . lsp-workspace-restart)
-      "l w q" '("Shutdown Server" . lsp-workspace-shutdown)
-      "l w d" '("Describe Session" . lsp-describe-session)
-      "l w D" '("Disconnect Buffer From Server" . lsp-disconnect)
-      "l =" '("Format" . (keymap))
-      "l = =" '("Format Buffer" . lsp-format-buffer)
-      "l = r" '("Format Region" . lsp-format-region)
-      "l F" '("Folders" . (keymap))
-      "l F a" '("Add To Workspaces" . lsp-workspace-folders-add)
-      "l F r" '("Remove From Workspaces" . lsp-workspace-folders-remove)
-      "l F b" '("Remove From Workspace Blocklist" . lsp-workspace-blocklist-remove)
-      "l T" '("Toggle" . (keymap))
-      "l T l" '("Toggle Lenses" . lsp-lens-mode)
-      "l T L" '("Toggle Log IO" . lsp-toggle-trace-io)
-      "l T h" '("Toggle Highlighting" . lsp-toggle-symbol-highlight)
-      "l T S" '("Toggle Sideline" . lsp-ui-sideline-mode)
-      "l T d" '("Toggle Docs pop-up" . lsp-ui-doc-mode)
-      "l T s" '("Toggle Signature" . lsp-toggle-signature-auto-activate)
-      "l T f" '("Toggle On Type Formatting" . lsp-toggle-on-type-formatting)
-      "l T T" '("Toggle Treemacs Integration" . lsp-treemacs-sync-mode)
-      "l g" '("Goto" . (keymap))
-      "l g a" '("Find Symbol In Workspace" . xref-find-apropos)
-      "l g d" '("Find Declarations" . lsp-find-declaration)
-      "l g e" '("Show Errors" . lsp-treemacs-errors-list)
-      "l g g" '("Find Definitions" . lsp-find-definition)
-      "l g h" '("Call Hierarchy" . lsp-treemacs-call-hierarchy)
-      "l g i" '("Find Implementations" . lsp-find-implementation)
-      "l g r" '("Find References" . lsp-find-references)
-      "l g t" '("Find Type Definition" . lsp-find-type-definition)
-      "l h" '("Help" . (keymap))
-      "l h g" '("Glance Symbol" . lsp-ui-doc-glance)
-      "l h h" '("Describe Symbol At Point" . lsp-describe-thing-at-point)
-      "l h s" '("Signature Help" . lsp-signature-activate)
-      "l r" '("Refactor" . (keymap))
-      "l r r" '("Rename" . lsp-rename)
-      "l r o" '("Organize Imports" . lsp-organize-imports)
-      "l a" '("Code Actions" . (keymap))
-      "l a a" '("Code Actions" . lsp-execute-code-action)
-      "l a h" '("Highlight Symbol" . lsp-document-highlight)
-      "l G" '("Peek" . (keymap))
-      "l G g" '("Peek Definitions" . lsp-ui-peek-find-definitions)
-      "l G i" '("Peek Implementations" . lsp-ui-peek-find-implementation)
-      "l G r" '("Peek References" . lsp-ui-peek-find-references)
-      "l G s" '("Peek Workspace Symbol" . lsp-ui-peek-find-workspace-symbol)))
+     :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+            (rust-mode . lsp)
+            (slint-mode . lsp)
+            (nix-mode . lsp)
+            ;; if you want which-key integration
+            (lsp-mode . lsp-enable-which-key-integration))
+     :commands lsp
+     :config
+     (my-leader-def 
+       :states '(normal)
+       :keymaps 'lsp-mode-map
+       "l" '("LSP" . (keymap))
+       "l w" '("Workspaces" . (keymap))
+       "l w s" '("Start Server" . lsp)
+       "l w r" '("Restart Server" . lsp-workspace-restart)
+       "l w q" '("Shutdown Server" . lsp-workspace-shutdown)
+       "l w d" '("Describe Session" . lsp-describe-session)
+       "l w D" '("Disconnect Buffer From Server" . lsp-disconnect)
+       "l =" '("Format" . (keymap))
+       "l = =" '("Format Buffer" . lsp-format-buffer)
+       "l = r" '("Format Region" . lsp-format-region)
+       "l F" '("Folders" . (keymap))
+       "l F a" '("Add To Workspaces" . lsp-workspace-folders-add)
+       "l F r" '("Remove From Workspaces" . lsp-workspace-folders-remove)
+       "l F b" '("Remove From Workspace Blocklist" . lsp-workspace-blocklist-remove)
+       "l T" '("Toggle" . (keymap))
+       "l T l" '("Toggle Lenses" . lsp-lens-mode)
+       "l T L" '("Toggle Log IO" . lsp-toggle-trace-io)
+       "l T h" '("Toggle Highlighting" . lsp-toggle-symbol-highlight)
+       "l T S" '("Toggle Sideline" . lsp-ui-sideline-mode)
+       "l T d" '("Toggle Docs pop-up" . lsp-ui-doc-mode)
+       "l T s" '("Toggle Signature" . lsp-toggle-signature-auto-activate)
+       "l T f" '("Toggle On Type Formatting" . lsp-toggle-on-type-formatting)
+       "l T T" '("Toggle Treemacs Integration" . lsp-treemacs-sync-mode)
+       "l g" '("Goto" . (keymap))
+       "l g a" '("Find Symbol In Workspace" . xref-find-apropos)
+       "l g d" '("Find Declarations" . lsp-find-declaration)
+       "l g e" '("Show Errors" . lsp-treemacs-errors-list)
+       "l g g" '("Find Definitions" . lsp-find-definition)
+       "l g h" '("Call Hierarchy" . lsp-treemacs-call-hierarchy)
+       "l g i" '("Find Implementations" . lsp-find-implementation)
+       "l g r" '("Find References" . lsp-find-references)
+       "l g t" '("Find Type Definition" . lsp-find-type-definition)
+       "l h" '("Help" . (keymap))
+       "l h g" '("Glance Symbol" . lsp-ui-doc-glance)
+       "l h h" '("Describe Symbol At Point" . lsp-describe-thing-at-point)
+       "l h s" '("Signature Help" . lsp-signature-activate)
+       "l r" '("Refactor" . (keymap))
+       "l r r" '("Rename" . lsp-rename)
+       "l r o" '("Organize Imports" . lsp-organize-imports)
+       "l a" '("Code Actions" . (keymap))
+       "l a a" '("Code Actions" . lsp-execute-code-action)
+       "l a h" '("Highlight Symbol" . lsp-document-highlight)
+       "l G" '("Peek" . (keymap))
+       "l G g" '("Peek Definitions" . lsp-ui-peek-find-definitions)
+       "l G i" '("Peek Implementations" . lsp-ui-peek-find-implementation)
+       "l G r" '("Peek References" . lsp-ui-peek-find-references)
+       "l G s" '("Peek Workspace Symbol" . lsp-ui-peek-find-workspace-symbol)))
 
-  ;; optionally
+    ;; optionally
   (use-package lsp-ui :commands lsp-ui-mode)
   (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
-  ;; optionally if you want to use debugger
+    ;; optionally if you want to use debugger
   (use-package dap-mode)
   (use-package dap-gdb)
-  ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+    ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
-  ;; optional if you want which-key integration
+    ;; optional if you want which-key integration
   (use-package which-key
     :config
     (which-key-mode))
 #+end_src
+
+#+RESULTS:
+: t
 
 ** Completion
 I am doing completion using the lovely Corfu
@@ -430,6 +434,7 @@ I am doing completion using the lovely Corfu
      #+end_src
 
 ** Nix
+~%dep%+{nixd}~
 #+begin_src emacs-lisp
 (use-package nix-mode
   :mode "\\.nix\\'")
