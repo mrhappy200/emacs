@@ -1,4 +1,7 @@
-# name: fixme
-# key: fixme
+# name: Module
+# key: mdl
 # --
-`(if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)`FIXME $0
+{ ${1: ${2:pkgs}, }... }: let
+in {
+   $0
+}
