@@ -132,6 +132,9 @@ We are going to turn off the startup message, enable a bell for when we hit file
              "M-*" 'yas-insert-snippet)
     :config
     (add-to-list 'yas-snippet-dirs "@snippets@")
+    (setq yas-prompt-functions '(yas-completing-read-prompt))
+  ;; Prevent field menu prompts from taking over the window layout
+  (setq yas-triggers-in-field nil)
     (yas-global-mode 1))
 
   (use-package yasnippet-snippets
@@ -192,6 +195,7 @@ We are going to turn off the startup message, enable a bell for when we hit file
 
 * Org mode
 ~%dep%+{texliveBasic}~
+~%dep%+{tetex}~
 #+begin_src emacs-lisp
 (setq org-latex-create-formula-image-program 'dvisvgm)
 ;; (setq org-format-latex-options
@@ -224,9 +228,27 @@ Add the Graphviz package and make it so inline images render correctly when eval
 ** Inkscape compat
 ~%dep%+{inkscape}~
 #+begin_src emacs-lisp
-  (use-package ink
-    :ensure nil)
+  ;(use-package ink
+  ;  :ensure nil)
 #+end_src
+
+** $\LaTeX$ Templates
+#+begin_src emacs-lisp
+(with-eval-after-load 'ox-latex
+  (add-to-list 'org-latex-classes
+               '("notes"
+                 "\\documentclass[11pt, a4paper]{article}
+                  \\input{@template-dir@/notes.tex}
+                  [NO-DEFAULT-PACKAGES]
+                  [PACKAGES]
+                  [EXTRA]"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+#+end_src
+
+#+RESULTS:
+| notes | \documentclass[11pt, a4paper]{article} |
 
 ** PDF Reader
 #+begin_src emacs-lisp
@@ -512,23 +534,25 @@ The rust toolchain package is defined in =flake.nix=.
     :config
     (my-leader-def
       :states '(normal)
-      :keymaps 'keymap
-      "f" '("Find" . keymap)
+      "f" '("Find" . (keymap))
       "f g" '("Recursive Grep" . 'consult-grep)
-      "f f" '("Recursive File Name Search" . 'consult-find))
+      "f f" '("Recursive File Name Search" . 'consult-find)
+      "f o" '("Search Outline" . consult-outline)
+      "f l" '("Grep Buffer" . consult-line)
+      "f b" '("Find Buffer" . consult-buffer)))
 
-    :general ;; A recursive grep
-    ("M-s M-g" 'consult-grep
-     ;; Search for files names recursively
-     "M-s M-f" 'consult-find
-     ;; search through the outline (headings) of the file
-     "M-s M-o" 'consult-outline
-     ;; Search the current buffer
-     "M-s M-l" 'consult-line
-     ;; Switch to another buffer, or bookmarked file, or recently
-     ;; opened file.
-     "M-s M-b" 'consult-buffer
-     "C-x b" 'consult-buffer))
+    ;;:general ;; A recursive grep
+    ;;("M-s M-g" 'consult-grep
+    ;; ;; Search for files names recursively
+    ;; "M-s M-f" 'consult-find
+    ;; ;; search through the outline (headings) of the file
+    ;; "M-s M-o" 'consult-outline
+    ;; ;; Search the current buffer
+    ;; "M-s M-l" 'consult-line
+    ;; ;; Switch to another buffer, or bookmarked file, or recently
+    ;; ;; opened file.
+    ;; "M-s M-b" 'consult-buffer
+    ;; "C-x b" 'consult-buffer))
 
   ;; The `embark' package lets you target the thing or context at point
   ;; and select an action to perform on it.  Use the `embark-act'
@@ -598,6 +622,9 @@ The rust toolchain package is defined in =flake.nix=.
   ;; either in projects or are bookmarked.
   (recentf-mode 1)
 #+end_src
+
+#+RESULTS:
+: t
 
 
 * Direnv

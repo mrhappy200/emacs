@@ -82,6 +82,7 @@
               hunspell = "${pkgs.lib.getExe pkgs.hunspell}";
               rust-toolchain = "${rust-toolchain}";
               snippets = "${./snippets}";
+              template-dir = "${./latex_templates}";
             };
           };
 

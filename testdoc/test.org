@@ -1,6 +1,16 @@
 #+title: File for testing org mode packages
 #+author: Ronan Berntsen
 #+language: English
+#+LATEX_CLASS: notes
+#+LATEX_CLASS_OPTIONS: [11pt, a4paper]
 
 * Ink.el testing
 A figure explaining the way my figure creation process works follows.
+
+\begin{figure}
+    \centering
+    \def\svgwidth{\columnwidth}
+    \subimport{figures}{afde.pdf_tex}
+    \caption{}
+    \label{fig:afde}
+\end{figure}
