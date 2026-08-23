@@ -193,7 +193,7 @@ We are going to turn off the startup message, enable a bell for when we hit file
 #+end_src
 
 * Org mode
-~%dep%+{texliveBasic}~
+~%dep%+{texliveFull}~
 ~%dep%+{tetex}~
 #+begin_src emacs-lisp
 (setq org-latex-create-formula-image-program 'dvisvgm)
@@ -227,8 +227,16 @@ Add the Graphviz package and make it so inline images render correctly when eval
 ** Inkscape compat
 ~%dep%+{inkscape}~
 #+begin_src emacs-lisp
-  ;(use-package ink
-  ;  :ensure nil)
+  (use-package ink
+    :ensure nil
+    :config
+    (my-local-leader-def
+      :states '(normal)
+      :keymaps '(latex-mode-map org-mode-map)'
+      "i" '("Inkscape figures" . (keymap))
+      "i n" '("New figure (opens Inkscape)" . ink-make-figure)
+      "i d" '("Duplicates figure (opens Inkscape)" . ink-duplicate-figure)
+      "i e" '("Edits figure (opens Inkscape)" . ink-edit-figure)))
 #+end_src
 
 ** $\LaTeX$ Templates

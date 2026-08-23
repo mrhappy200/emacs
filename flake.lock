@@ -58,18 +58,14 @@
     "ink": {
       "flake": false,
       "locked": {
-        "lastModified": 1784850010,
-        "narHash": "sha256-FiC3BUEEveBZ1UvR4e4YUgqn9oNyT991jVI7FviHbDI=",
-        "owner": "foxfriday",
-        "repo": "ink",
-        "rev": "4774bc1940be3bea8903f5a717c51fc804218355",
-        "type": "github"
+        "path": "./ink/",
+        "type": "path"
       },
       "original": {
-        "owner": "foxfriday",
-        "repo": "ink",
-        "type": "github"
-      }
+        "path": "./ink/",
+        "type": "path"
+      },
+      "parent": []
     },
     "nixpkgs": {
       "locked": {

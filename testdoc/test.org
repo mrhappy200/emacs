@@ -12,5 +12,15 @@ A figure explaining the way my figure creation process works follows.
     \def\svgwidth{\columnwidth}
     \subimport{figures}{afde.pdf_tex}
     \caption{}
+
     \label{fig:afde}
 \end{figure}
+
+\begin{figure}
+    \centering
+    \def\svgwidth{\columnwidth}
+    \subimport{figures}{Whooples.pdf_tex}
+    \caption{}
+    \label{fig:whooples}
+\end{figure}
+

@@ -10,7 +10,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     ink = {
-      url = "file://ink";
+      url = "path:./ink/";
       flake = false;
     };
     emacs-reader = {
@@ -50,7 +50,10 @@
             depLines = builtins.filter (line: builtins.match regex line != null) lines;
 
             deps = builtins.map (l: builtins.elemAt (builtins.match regex l) 0) depLines;
-            depPkgs = builtins.map (n: pkgs.${n}) deps;
+            #depPkgs = builtins.map (n: pkgs.${n}) deps;
+            depPkgs = builtins.map (
+              n: pkgs.lib.attrByPath (pkgs.lib.splitString "." n) (throw "Package ${n} not found") pkgs
+            ) deps;
           in
           depPkgs;
         buildInputs =
