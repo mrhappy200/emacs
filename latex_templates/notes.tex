@@ -1,23 +1,341 @@
-% Layout & Typography
-\usepackage[margin=1in]{geometry}
-\usepackage[T1]{fontenc}
-\usepackage{microtype}
+\newif\ifisdraft\isdraftfalse
+\newif\ifprint\printfalse
+%\documentclass[twoside]{article}
 
-% Design Elements
-\usepackage{graphicx}
-\usepackage{booktabs}
+% Plots
+\usepackage[x11names,svgnames,table]{xcolor}
+\usepackage{tikz,pgfplots,pgfplotstable}
+\pgfplotsset{width=0.75\linewidth, compat=1.18}
+\usepgfplotslibrary{external}
+\tikzexternalize[prefix=tikz/, optimize=true, optimize command away=\includepdf]
+
+\tikzifexternalizing{%
+    % don't include package XYZ here
+}{%
+    \usepackage{pdfpages}
+}%
+
+% Glossaries
+\usepackage[acronym]{glossaries}
+
+\makenoidxglossaries
+\loadglsentries{~/Documents/notes/global/begrippenlijst.tex}
+\renewcommand*{\seename}{zie}
+
+\usepackage{lineno}
+
+
+
+% Quotes work now
+\usepackage[autostyle]{csquotes}
+
+% Footers and page numbers  
+\usepackage{fancyhdr}
+
+% Changepage allows stuff that doesn't fit to go off the page with the \begin{adjustwidth}{-2cm}{} command. it also helps with the intentionally blank page on odd page numbers.
+\usepackage[strict]{changepage}
+
+% Colour section headings
 \usepackage{xcolor}
 
-% Hyperlink Styling
-\usepackage{hyperref}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    citecolor=blue,
-    urlcolor=teal
-}
+% Stop sectsty from making warnings that don't make sense
+\usepackage[immediate]{silence}
+\WarningFilter[temp]{latex}{Command} % silence the warning
+\usepackage{sectsty}
+\DeactivateWarningFilters[temp] % So nothing unrelated gets silenced
 
+\makeatletter % disable the runtime redefinitions
+\let\SS@makeulinesect\relax
+\let\SS@makeulinepartchap\relax
+\makeatother
+
+% More symbols
+\usepackage{textcomp}
+
+% Ifthenelse
+\usepackage{ifthen}
+
+% Needed for ununderstood reasons
 \usepackage{import}
 
-% Custom Command Example
-\newcommand{\customnote}[1]{{\color{teal}\textbf{Note:} #1}}
+% Part of adding red text to todo items list
+\usepackage{nameref}
+
+% --- Manual To-Do List Setup ---
+\makeatletter
+
+% Setup infrastructure to disable errors when a list is empty since it is sometimes in some runs of lualatex
+\let\@oldnoitemerr\@noitemerr %Save the command definition                      
+\newcommand\noitemerroroff{\let\@noitemerr\relax}
+\newcommand\noitemerroron{\let\@noitemerr\@oldnoitemerr}
+
+% 1. Create a new file handle for our to-do list
+\newwrite\todofile
+
+% 2. Open the .tdo file when the document begins.
+%    \jobname refers to the main name of your .tex file.
+%\AtBeginDocument{\openout\todofile=\jobname.tdo}
+\immediate\openout\todofile=\jobname.tdo
+
+\newcounter{todocounter}
+
+% 4. Define the command that will format each item in the list.
+%    This command will be written to the .tdo file and executed later.
+%    #1 is the to-do text, #2 is the page number.
+%    \dotfill adds dots before the page number for alignment.
+\newcommand{\todolistitem}[3]{\hyperlink{#3}{\item #1 \dotfill \textit{p.~#2}}}
+
+% 5. Define your \todo command.
+\newcommand{\todo}[1]{%
+  \stepcounter{todocounter}%
+  \hypertarget{\thetodocounter}{}%
+  \protected@write\todofile{}{%
+    % Add \@currentlabelname for debugging
+    \protect\todolistitem{#1}{\thepage}{\the\value{todocounter}}%
+  }%
+}
+
+% 6. Define the \listoftodos command to display the list.
+\newcommand{\listoftodos}{%
+  \section*{List of To-Do Items}% Set a title
+  \noitemerroroff
+  \begin{itemize}% Use an itemized list environment
+  % Check if the .tdo file exists. If yes, input it.
+  % If not (e.g., first run), print a message.
+  \IfFileExists{\jobname.tdo}{%
+      \input{|"sh ~/Documents/notes/global/sortscript.sh"}
+      % \@input{\jobname.tdo}% Read the .tdo file
+  }{%
+      \item No To-Do items yet!%
+  }%
+  
+  \end{itemize}% Close the list environment
+  \noitemerroron
+}
+
+% Part of adding red text to todo items list
+\newcommand*{\currentname}{\@currentlabelname}
+
+\makeatother
+
+\usepackage{luacolor,lua-ul} %for usage of style attributes - background color
+
+\ifprint
+% \newcommand{\fout}[2][_VAR_ Rode tekst]{\ifthenelse{\equal{#1}{notodo}}{}{\todo{\theparagraph: #1}}\textit{#2}}
+% \newcommand{\highlight}[1]{\todo{\theparagraph: #1}\colorbox{lightgray}{#1}}
+\newcommand{\fout}[2][_VAR_ Rode tekst]{}
+\newcommand{\highlight}[1]{}
+\else
+\newcommand{\fout}[2][_VAR_ Rood (\immediate\currentname)]{\ifthenelse{\equal{#1}{notodo}}{}{\todo{\theparagraph: #1}}\textcolor{red}{#2}}
+\newcommand{\highlight}[1]{\todo{\theparagraph: #1}\highLight{#1}}
+\fi
+
+% Watermark
+% \usepackage{draftwatermark}
+% \SetWatermarkText{TECHNASIUM}
+% \SetWatermarkScale{0.6}
+% \SetWatermarkLightness{0.9}
+
+% Frontmatter, Mainmatter, and Backmatter
+\makeatletter
+
+\newcommand\frontmatter{%
+  %\@mainmatterfalse
+  \pagenumbering{roman}
+  }
+
+\newcommand\mainmatter{%
+ % \@mainmattertrue
+  \pagenumbering{arabic}
+  }
+
+\newcommand\backmatter{%
+  \if@openright
+    \cleardoublepage
+  \else
+    \clearpage
+  \fi
+ % \@mainmatterfalse
+   }
+
+\makeatother
+
+% language
+\usepackage{polyglossia}
+\setdefaultlanguage[babelshorthands,tremahyphenation]{dutch}
+%\setdefaultlanguage[variant=british,ordinalmonthday]{english}
+
+% Page geometry
+\usepackage[a4paper,margin=2cm, marginparwidth=1.6cm,marginparsep=0.2cm]{geometry}
+
+% Verbatim
+\usepackage{verbatim}
+
+% Math
+\usepackage{amsmath}
+
+% Make H float specifier which makes images work in multicol environments
+\usepackage{float}
+
+% Alter list spacing
+\usepackage{enumitem}
+\setlist{nosep} % or \setlist{noitemsep} to leave space around whole list
+
+% Symbolen. Vooral graden
+\usepackage{gensymb}
+
+% Images
+\usepackage{graphicx}
+% Typography
+\usepackage{microtype}
+  % Quotes
+\usepackage{csquotes}
+  % Fonts
+  \usepackage[T1]{fontenc}
+  \usepackage{wedn}
+  %Or use Times?
+  %%\usepackage{mathptmx}
+  % Baskervaldx
+  \iftrue
+   \usepackage[lf]{Baskervaldx} % lining figures
+   \usepackage[bigdelims,vvarbb]{newtxmath} % math italic letters from Nimbus Roman
+   \usepackage[cal=boondoxo]{mathalfa} % mathcal from STIX, unslanted a bit
+   \renewcommand*\oldstylenums[1]{\textosf{#1}}
+  \fi
+
+
+
+
+
+% Bibliography
+\usepackage[
+backend=biber,
+style=apa,
+]{biblatex}
+\addbibresource{~/Documents/notes/global/bronnen.bib}
+\DeclareLanguageMapping{latin}{english}
+
+% #E68A1E, #F0AC1A, #F6C521, #FBE106
+
+% h1 kleur
+\definecolor{Accent1}{HTML}{E68A1E}
+
+% h2 kleur
+\definecolor{Accent2}{HTML}{F0AC1A}
+
+% h3 kleur
+\definecolor{Accent3}{HTML}{F6C521}
+
+% h4 kleur
+\definecolor{Accent4}{HTML}{FBE106}
+
+\sectionfont{\color{Accent1}}  % sets colour of sections
+\subsectionfont{\color{Accent2}}
+\subsubsectionfont{\color{Accent3}}
+
+% Don't ask how this works, I don't really know either. In theory it makes paragraphs behave as subsubsubsections though and in practice too!
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+
+\makeatletter
+\renewcommand{\paragraph}{
+\@startsection{paragraph}{4}{\z@}%
+                                    {3.25ex \@plus1ex \@minus.2ex}%
+                                    {0.1ex}%
+                                    {\normalfont\small\bfseries\color{Accent4}}
+}
+
+% Alias subsubsubsection to paragraph
+\newcommand{\subsubsubsection}{\paragraph}
+
+\makeatother
+
+% For writing down notes and stuff
+\usepackage[
+linenumber,
+incolumn,
+]{mindflow}
+
+% Appendix
+\usepackage[title,titletoc]{appendix}
+
+% For code formatting
+\usepackage{listings}
+
+% Better references
+\ifprint
+\usepackage[colorlinks=false, allcolors=blue]{hyperref}
+\else
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\fi
+\usepackage[nameinlink]{cleveref}
+
+
+
+% Misc
+\let\tqs\textquotesingle
+
+% Multiple columns
+\usepackage{multicol}
+
+% We want stuff like the TOC and the bibliography included in the TOC
+\usepackage{tocbibind}
+
+% Gifs
+\usepackage{animate}
+
+% Tables
+\usepackage{booktabs}
+
+% Tabel alignment
+\usepackage{array}
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+% Add a colon at a description list
+\renewcommand*{\descriptionlabel}[1]{\hspace{\labelsep}\textbf{#1:}}
+
+\usepackage{lipsum}
+\setotherlanguage{latin}
+
+% lipsum rood maken
+\NewCommandCopy{\oldlipsum}{\lipsum}
+\renewcommand{\lipsum}[1][1]{\fout[_VAR_ Lipsum (\immediate\currentname)]{Dit is een plek waar tekst hoort te zijn maar die nog niet af is of die niet nodig beschouwd wordt voor deze versie van het document \oldlipsum[#1]}}
+
+\def\projectnaam{Zonnepaneel met richtsysteem}
+\title{Profielwerkstuk \projectnaam}
+
+
+\newcommand{\NotesDocumentSetup}{%
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\setlength{\headheight}{32.04134pt}
+\addtolength{\topmargin}{-15.04134pt}
+\fancyhead[CO,CE]{\textcolor{Accent1}{\textbf{Notes --- \date}}}
+%\fancyhead[RO,LE]{\includegraphics[width=1cm]{Images/SolarTeamEindhovenLogoSquare.png}}
+%\fancyhead[LO,RE]{\includegraphics[width=1cm]{Images/GooisLyceumLogoSquare.png}}
+\fancyfoot{} % clear all footer fields
+\fancyfoot[LE,RO]{\thepage}
+
+%\tikzifexternalizing{%
+%}{%
+%    \includepdf{Images/PWSVoorblad.pdf}
+%}%
+
+\maketitle
+
+\clearpage
+\clearpage
+
+\frontmatter
+
+\setcounter{page}{1}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\setcounter{page}{1}
+\mainmatter
+}
+
+\AtBeginDocument{\NotesDocumentSetup}

@@ -241,17 +241,18 @@ Add the Graphviz package and make it so inline images render correctly when eval
 
 ** $\LaTeX$ Templates
 #+begin_src emacs-lisp
-(with-eval-after-load 'ox-latex
-  (add-to-list 'org-latex-classes
-               '("notes"
-                 "\\documentclass[11pt, a4paper]{article}
-                  \\input{@template-dir@/notes.tex}
-                  [NO-DEFAULT-PACKAGES]
-                  [PACKAGES]
-                  [EXTRA]"
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+  (with-eval-after-load 'ox-latex
+    (add-to-list 'org-latex-classes
+                 '("notes"
+                   "\\documentclass[11pt, a4paper]{article}
+                    \\input{@template-dir@/notes.tex}
+                    [NO-DEFAULT-PACKAGES]
+                    [PACKAGES]
+                    [EXTRA]
+                   \\AtEndDocument{\\input{@template-dir@/notes-footer.tex}}"
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
 #+end_src
 
 #+RESULTS:

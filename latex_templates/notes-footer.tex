@@ -1,0 +1,68 @@
+\cleardoublepage
+
+\printbibliography
+\setglossarystyle{list}
+\printnoidxglossaries
+\ifprint
+\immediate\closeout\todofile
+\else
+\immediate\closeout\todofile
+\listoftodos
+\fi
+\end{multicols}
+
+%\renewcommand{\appendixname}{Bijlage}
+%
+%\clearpage
+%\begin{appendices}
+%\input{source/Code}
+%
+%\section{Technische tekening}
+%\tikzifexternalizing{%
+%}{%
+%    \includepdf[pages=-]{source/tekening.pdf}
+%}%
+%\end{appendices}
+
+%\checkoddpage
+%\ifoddpage
+%\else
+%\clearpage
+%\begin{center}
+%\vspace*{\fill}
+%Deze pagina is met opzet leeg gelaten.
+%\vspace*{\fill}
+%\end{center}
+%\clearpage
+%\fi
+
+
+%%\tikzifexternalizing{%
+%%}{%
+%%    \includepdf{Images/PvAAchterkant.png}
+%%}%
+
+\end{document}
+%% Layout & Typography
+%\usepackage[margin=1in]{geometry}
+%\usepackage[T1]{fontenc}
+%\usepackage{microtype}
+%
+%% Design Elements
+%\usepackage{graphicx}
+%\usepackage{booktabs}
+%\usepackage{xcolor}
+%
+%% Hyperlink Styling
+%\usepackage{hyperref}
+%\hypersetup{
+%    colorlinks=true,
+%    linkcolor=blue,
+%    citecolor=blue,
+%    urlcolor=teal
+%}
+%
+%\usepackage{import}
+%
+%% Custom Command Example
+%\newcommand{\customnote}[1]{{\color{teal}\textbf{Note:} #1}}

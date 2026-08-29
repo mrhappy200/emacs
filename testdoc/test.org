@@ -1,8 +1,10 @@
 #+title: File for testing org mode packages
 #+author: Ronan Berntsen
+#+date: 2026-08-29
 #+language: English
 #+LATEX_CLASS: notes
-#+LATEX_CLASS_OPTIONS: [11pt, a4paper]
+#+LATEX_CLASS_OPTIONS: [twoside,11pt, a4paper]
+#+LATEX_COMPILER: lualatex
 
 * Ink.el testing
 A figure explaining the way my figure creation process works follows.
@@ -19,8 +21,9 @@ A figure explaining the way my figure creation process works follows.
 \begin{figure}
     \centering
     \def\svgwidth{\columnwidth}
-    \subimport{figures}{Whooples.pdf_tex}
+    \subimport{figures}{Wobble.pdf_tex}
     \caption{}
-    \label{fig:whooples}
+    \label{fig:wobble}
 \end{figure}
 
+\todo{Finish document}
