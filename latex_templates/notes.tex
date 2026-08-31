@@ -20,7 +20,7 @@
 
 \makenoidxglossaries
 \loadglsentries{~/Documents/notes/global/begrippenlijst.tex}
-\renewcommand*{\seename}{zie}
+%\renewcommand*{\seename}{zie}
 
 \usepackage{lineno}
 
@@ -75,7 +75,7 @@
 % 2. Open the .tdo file when the document begins.
 %    \jobname refers to the main name of your .tex file.
 %\AtBeginDocument{\openout\todofile=\jobname.tdo}
-\immediate\openout\todofile=\jobname.tdo
+\immediate\openout\todofile=output.tdo
 
 \newcounter{todocounter}
 
@@ -102,7 +102,7 @@
   \begin{itemize}% Use an itemized list environment
   % Check if the .tdo file exists. If yes, input it.
   % If not (e.g., first run), print a message.
-  \IfFileExists{\jobname.tdo}{%
+  \IfFileExists{output.tdo}{%
       \input{|"sh ~/Documents/notes/global/sortscript.sh"}
       % \@input{\jobname.tdo}% Read the .tdo file
   }{%
@@ -162,8 +162,8 @@
 
 % language
 \usepackage{polyglossia}
-\setdefaultlanguage[babelshorthands,tremahyphenation]{dutch}
-%\setdefaultlanguage[variant=british,ordinalmonthday]{english}
+%\setdefaultlanguage[babelshorthands,tremahyphenation]{dutch}
+\setdefaultlanguage[variant=british,ordinalmonthday]{english}
 
 % Page geometry
 \usepackage[a4paper,margin=2cm, marginparwidth=1.6cm,marginparsep=0.2cm]{geometry}
@@ -218,16 +218,16 @@ style=apa,
 % #E68A1E, #F0AC1A, #F6C521, #FBE106
 
 % h1 kleur
-\definecolor{Accent1}{HTML}{E68A1E}
+\definecolor{Accent1}{HTML}{2E3440}
 
 % h2 kleur
-\definecolor{Accent2}{HTML}{F0AC1A}
+\definecolor{Accent2}{HTML}{3B4252}
 
 % h3 kleur
-\definecolor{Accent3}{HTML}{F6C521}
+\definecolor{Accent3}{HTML}{434C5E}
 
 % h4 kleur
-\definecolor{Accent4}{HTML}{FBE106}
+\definecolor{Accent4}{HTML}{4C566A}
 
 \sectionfont{\color{Accent1}}  % sets colour of sections
 \subsectionfont{\color{Accent2}}
@@ -297,12 +297,15 @@ incolumn,
 \usepackage{lipsum}
 \setotherlanguage{latin}
 
+\usepackage{titling}
+
 % lipsum rood maken
 \NewCommandCopy{\oldlipsum}{\lipsum}
-\renewcommand{\lipsum}[1][1]{\fout[_VAR_ Lipsum (\immediate\currentname)]{Dit is een plek waar tekst hoort te zijn maar die nog niet af is of die niet nodig beschouwd wordt voor deze versie van het document \oldlipsum[#1]}}
+\renewcommand{\lipsum}[1][1]{\fout[_VAR_ Lipsum (\immediate\currentname)]{\oldlipsum[#1]}}
 
-\def\projectnaam{Zonnepaneel met richtsysteem}
-\title{Profielwerkstuk \projectnaam}
+\makeatletter
+\def\fulltitle{\subject\,---\,\thetitle\,---\,\thedate}
+\makeatother
 
 
 \newcommand{\NotesDocumentSetup}{%
@@ -310,7 +313,7 @@ incolumn,
 \fancyhead{} % clear all header fields
 \setlength{\headheight}{32.04134pt}
 \addtolength{\topmargin}{-15.04134pt}
-\fancyhead[CO,CE]{\textcolor{Accent1}{\textbf{Notes --- \date}}}
+\fancyhead[CO,CE]{\textcolor{Accent1}{\textbf{\fulltitle}}}
 %\fancyhead[RO,LE]{\includegraphics[width=1cm]{Images/SolarTeamEindhovenLogoSquare.png}}
 %\fancyhead[LO,RE]{\includegraphics[width=1cm]{Images/GooisLyceumLogoSquare.png}}
 \fancyfoot{} % clear all footer fields
@@ -321,14 +324,13 @@ incolumn,
 %    \includepdf{Images/PWSVoorblad.pdf}
 %}%
 
+\frontmatter
+
+\setcounter{page}{1}
 \maketitle
 
 \clearpage
 \clearpage
-
-\frontmatter
-
-\setcounter{page}{1}
 
 \clearpage
 \tableofcontents

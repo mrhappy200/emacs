@@ -1,44 +1,43 @@
-% Created 2026-08-29 za 15:13
+% Created 2026-08-29 za 20:32
 % Intended LaTeX compiler: lualatex
-\documentclass[twoside,11pt, a4paper]{article}
-                  \input{/nix/store/ax5cy3zf467v4giy6c8nii1hfc930zi1-latex_templates/notes.tex}
-                                    
-                 \AtEndDocument{\input{/nix/store/ax5cy3zf467v4giy6c8nii1hfc930zi1-latex_templates/notes-footer.tex}}
+\documentclass[11pt, a4paper]{article}
+                  \input{/nix/store/syz61svlna9vrpzk7cnjng37ijw59ndp-latex_templates/notes.tex}
+                                    \usepackage{draftwatermark}
+\SetWatermarkText{DRAFT}
+\SetWatermarkScale{0.6}
+\SetWatermarkLightness{0.9}
+
+                 \AtEndDocument{\input{/nix/store/syz61svlna9vrpzk7cnjng37ijw59ndp-latex_templates/notes-footer.tex}}
 \author{Ronan Berntsen}
 \date{2026-08-29}
-\title{File for testing org mode packages}
+\title{Notes}
 \hypersetup{
  pdfauthor={Ronan Berntsen},
- pdftitle={File for testing org mode packages},
+ pdftitle={Notes},
  pdfkeywords={},
  pdfsubject={},
  pdfcreator={Emacs 30.2 (Org mode 9.7.11)}, 
  pdflang={English}}
+\newcommand{\subject}{Latex 101}
 \begin{document}
 
-\maketitle
-\tableofcontents
-
 \section{Ink.el testing}
-\label{sec:org296bb38}
-A figure explaining the way my figure creation process works follows.
+\label{sec:org4b56863}
 
 \begin{figure}
     \centering
     \def\svgwidth{\columnwidth}
-    \subimport{figures}{afde.pdf_tex}
+    \subimport{figures}{Emacsconfig.pdf_tex}
     \caption{}
-
-    \label{fig:afde}
+    \label{fig:emacsconfig}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \def\svgwidth{\columnwidth}
-    \subimport{figures}{Wobble.pdf_tex}
-    \caption{}
-    \label{fig:wobble}
-\end{figure}
-
-\todo{Finish document}
+It worked, see \cref{fig:emacsconfig}
+\section{Graphviz dot}
+\label{sec:orgc15d0d1}
+\todo{fix graphviz render}
+\begin{center}
+\includegraphics[width=.9\linewidth]{graph.pdf}
+\label{org1a38715}
+\end{center}
 \end{document}

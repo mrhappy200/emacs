@@ -241,6 +241,13 @@ Add the Graphviz package and make it so inline images render correctly when eval
 
 ** $\LaTeX$ Templates
 #+begin_src emacs-lisp
+  (with-eval-after-load 'ox
+    (setq org-export-allow-bind-keywords t)
+    (setq org-export-with-title nil)
+    (setq org-export-with-toc nil)
+    (add-to-list 'org-export-options-alist
+                 '(:subject "SUBJECT" nil "Placeholder 101" t)))
+
   (with-eval-after-load 'ox-latex
     (add-to-list 'org-latex-classes
                  '("notes"
@@ -252,7 +259,23 @@ Add the Graphviz package and make it so inline images render correctly when eval
                    \\AtEndDocument{\\input{@template-dir@/notes-footer.tex}}"
                    ("\\section{%s}" . "\\section*{%s}")
                    ("\\subsection{%s}" . "\\subsection*{%s}")
-                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+
+    (setq org-latex-pdf-process
+          '("lualatex --shell-escape --interaction nonstopmode --output-directory %o %f"
+            "lualatex --shell-escape --interaction nonstopmode --output-directory %o %f"))
+
+    (defun my/org-latex-notes-filter (output backend info)
+      (when (and (org-export-derived-backend-p backend 'latex)
+                 (string= (plist-get info :latex-class) "notes"))
+        (replace-regexp-in-string
+         "\\\\begin{document}"
+         (format "\\\\newcommand{\\\\subject}{%s}\n\\\\begin{document}"
+                 (plist-get info :subject))
+         output)))
+
+    (add-hook 'org-export-filter-final-output-functions
+              #'my/org-latex-notes-filter))
 #+end_src
 
 #+RESULTS:

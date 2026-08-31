@@ -1,29 +1,47 @@
-#+title: File for testing org mode packages
+#+title: Notes
 #+author: Ronan Berntsen
 #+date: 2026-08-29
 #+language: English
+
+#+subject: Latex 101
+
 #+LATEX_CLASS: notes
-#+LATEX_CLASS_OPTIONS: [twoside,11pt, a4paper]
 #+LATEX_COMPILER: lualatex
 
+#+LATEX_HEADER: \usepackage{draftwatermark}
+#+LATEX_HEADER: \SetWatermarkText{DRAFT}
+#+LATEX_HEADER: \SetWatermarkScale{0.6}
+#+LATEX_HEADER: \SetWatermarkLightness{0.9}
+
 * Ink.el testing
-A figure explaining the way my figure creation process works follows.
 
 \begin{figure}
     \centering
     \def\svgwidth{\columnwidth}
-    \subimport{figures}{afde.pdf_tex}
+    \subimport{figures}{Emacsconfig.pdf_tex}
     \caption{}
-
-    \label{fig:afde}
+    \label{fig:emacsconfig}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \def\svgwidth{\columnwidth}
-    \subimport{figures}{Wobble.pdf_tex}
-    \caption{}
-    \label{fig:wobble}
-\end{figure}
+It worked, see \cref{fig:emacsconfig}
 
-\todo{Finish document}
+* Graphviz dot
+\todo{fix graphviz render}
+#+begin_src dot :file graph.pdf :results image
+  digraph G {
+    node [fontname = "Baskerville"];
+    edge [fontname = "Baskerville"];
+
+    config [label = "emacs.org" shape = "parallelogram"];
+    flake [label = "flake.nix" shape = "parallelogram"];
+    nix [label = "Nix" shape = "rect"];
+    wrapper [label = "Emacs Wrapper" shape = "oval"];
+
+    config -> nix;
+    flake -> nix;
+    nix -> wrapper;
+  }
+#+end_src
+
+#+RESULTS:
+[[file:graph.pdf]]
