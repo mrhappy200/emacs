@@ -1,28 +1,49 @@
-% Created 2026-08-29 za 20:32
+% Created 2026-09-02 wo 14:43
 % Intended LaTeX compiler: lualatex
-\documentclass[11pt, a4paper]{article}
-                  \input{/nix/store/syz61svlna9vrpzk7cnjng37ijw59ndp-latex_templates/notes.tex}
-                                    \usepackage{draftwatermark}
-\SetWatermarkText{DRAFT}
-\SetWatermarkScale{0.6}
-\SetWatermarkLightness{0.9}
+\documentclass[11pt,a4paper]{article}
+\input{/nix/store/4v35qm96bfvbrajihphlbh9pv486n054-latex_templates/notes.tex}
 
-                 \AtEndDocument{\input{/nix/store/syz61svlna9vrpzk7cnjng37ijw59ndp-latex_templates/notes-footer.tex}}
-\author{Ronan Berntsen}
-\date{2026-08-29}
-\title{Notes}
+\AtEndDocument{\input{/nix/store/4v35qm96bfvbrajihphlbh9pv486n054-latex_templates/notes-footer.tex}}
+\author{Ronan berntsen}
+\date{2026-09-02}
+\title{Notes\\\medskip
+\large My notes on the topic}
 \hypersetup{
- pdfauthor={Ronan Berntsen},
+ pdfauthor={Ronan berntsen},
  pdftitle={Notes},
  pdfkeywords={},
  pdfsubject={},
  pdfcreator={Emacs 30.2 (Org mode 9.7.11)}, 
  pdflang={English}}
-\newcommand{\subject}{Latex 101}
+\def\NotesSubject{\LaTeX 101}
+\def\NotesSubtitle{My notes on the topic}
+\NotesTOCfalse
+\NotesGlossaryfalse
+\NotesTodotrue
+\NotesDrafttrue
+\NotesWideTitlesfalse
+\NotesTitlePagefalse
 \begin{document}
 
+\section{Custom box testing}
+\label{sec:org1c2f61d}
+\begin{infobox}
+  This is general information the reader should be aware of.
+\end{infobox}
+
+\begin{notebox}
+  A helpful clarification or supplementary detail.
+\end{notebox}
+
+\begin{warningbox}
+  Something that may cause unexpected behaviour if ignored.
+\end{warningbox}
+
+\begin{dangerbox}
+  A critical issue — data loss or irreversible consequences possible.
+\end{dangerbox}
 \section{Ink.el testing}
-\label{sec:org4b56863}
+\label{sec:org13767ce}
 
 \begin{figure}
     \centering
@@ -34,10 +55,10 @@
 
 It worked, see \cref{fig:emacsconfig}
 \section{Graphviz dot}
-\label{sec:orgc15d0d1}
+\label{sec:org6807aa4}
 \todo{fix graphviz render}
 \begin{center}
 \includegraphics[width=.9\linewidth]{graph.pdf}
-\label{org1a38715}
+\label{org2ba58c2}
 \end{center}
 \end{document}

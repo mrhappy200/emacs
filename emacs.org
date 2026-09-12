@@ -65,6 +65,16 @@ We are going to turn off the startup message, enable a bell for when we hit file
 
 * MISC
 
+** Rainbow delimiters and electric pairs
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :ensure t
+    :init
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+  (add-hook 'prog-mode-hook #'electric-pair-mode)
+#+end_src
+
+
 ** Please put the autosave and backup files somewhere where git won't get them
 #+BEGIN_SRC emacs-lisp
   ;; Put backup files neatly away
@@ -88,52 +98,19 @@ We are going to turn off the startup message, enable a bell for when we hit file
 
 ** QOL editing and snippets
 #+begin_src emacs-lisp
-    ;(defvar my/tempel-templates
-    ;  '(fundamental-mode
-    ;    (today (format-time-string "%Y-%m-%d") :doc "Insert today's date")
-    ;    prog-mode
-    ;    (fixme (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "FIXME ")
-    ;    (todo (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "TODO ")
-    ;    emacs-lisp-mode
-    ;    (my-leader-def
-    ;     "(my-leader-def" n>
-    ;     ":states '(" (p "states") ")" n>
-    ;     ":keymaps '" (p "keymap") n>
-    ;     "\"" (p "key") "\" '(\"" (p "desc") "\" . " (p "action") ")" n>
-    ;     r> ")")
-    ;    (my-leader-key
-    ;     "\"" (p "key") "\" '(\"" (p "label") "\" . " (p "action") ")" n>)))
-
-    ;(use-package tempel
-    ;  :ensure t
-    ;  :general
-    ;  (:states '(insert normal)
-    ;           "M-+" 'tempel-complete
-    ;           "M-*" 'tempel-insert)
-    ;  :init
-    ;  (defun tempel-setup-capf ()
-    ;    (add-hook 'completion-at-point-functions #'tempel-complete nil 'local))
-
-    ;  (add-hook 'conf-mode-hook 'tempel-setup-capf)
-    ;  (add-hook 'prog-mode-hook 'tempel-setup-capf)
-    ;  (add-hook 'text-mode-hook 'tempel-setup-capf)
-    ;  (add-hook 'org-mode-hook 'tempel-setup-capf)
-    ;  :config
-    ;  (add-to-list 'tempel-template-sources 'my/tempel-templates))
-
-    ;(use-package tempel-collection
-    ;  :ensure t)
   (use-package yasnippet
     :ensure t
+    :demand t
     :general
     (:states '(insert normal)
              "M-+" 'yas-expand
              "M-*" 'yas-insert-snippet)
     :config
     (add-to-list 'yas-snippet-dirs "@snippets@")
+    (add-to-list 'yas-snippet-dirs "~/Documents/Snippets")
     (setq yas-prompt-functions '(yas-completing-read-prompt))
-  ;; Prevent field menu prompts from taking over the window layout
-  (setq yas-triggers-in-field nil)
+    ;; Prevent field menu prompts from taking over the window layout
+    (setq yas-triggers-in-field nil)
     (yas-global-mode 1))
 
   (use-package yasnippet-snippets
@@ -189,12 +166,12 @@ We are going to turn off the startup message, enable a bell for when we hit file
 
 * Theme
 #+begin_src emacs-lisp
-  (load-theme 'modus-vivendi t)
+  (load-theme 'modus-operandi t)
 #+end_src
 
 * Org mode
 ~%dep%+{texliveFull}~
-~%dep%+{tetex}~
+~%dep%+{gcc}~
 #+begin_src emacs-lisp
 (setq org-latex-create-formula-image-program 'dvisvgm)
 ;; (setq org-format-latex-options
@@ -205,8 +182,11 @@ We are going to turn off the startup message, enable a bell for when we hit file
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((dot . t)      ; activates dot
+    (C . t)      ; activates dot
      (latex . t)))) ; activates latex
 #+end_src
+
+** TODO Org agenda
 
 ** Hunspell
 #+begin_src emacs-lisp
@@ -245,34 +225,77 @@ Add the Graphviz package and make it so inline images render correctly when eval
     (setq org-export-allow-bind-keywords t)
     (setq org-export-with-title nil)
     (setq org-export-with-toc nil)
+
     (add-to-list 'org-export-options-alist
-                 '(:subject "SUBJECT" nil "Placeholder 101" t)))
+                 '(:subject "SUBJECT" nil "" t))
+    (add-to-list 'org-export-options-alist
+                 '(:notes-toc "NOTES_TOC" nil nil t))
+    (add-to-list 'org-export-options-alist
+                 '(:notes-glossary "NOTES_GLOSSARY" nil nil t))
+    (add-to-list 'org-export-options-alist
+                 '(:notes-todo "NOTES_TODO" nil nil t))
+    (add-to-list 'org-export-options-alist
+                 '(:isdraft "ISDRAFT" nil nil t))
+    (add-to-list 'org-export-options-alist
+                 '(:notes-widetitles "NOTES_WIDE_TITLES" nil t t))
+    (add-to-list 'org-export-options-alist
+                 '(:notes-titlepage "NOTES_TITLEPAGE" nil nil t)))
 
   (with-eval-after-load 'ox-latex
-    (add-to-list 'org-latex-classes
-                 '("notes"
-                   "\\documentclass[11pt, a4paper]{article}
-                    \\input{@template-dir@/notes.tex}
-                    [NO-DEFAULT-PACKAGES]
-                    [PACKAGES]
-                    [EXTRA]
-                   \\AtEndDocument{\\input{@template-dir@/notes-footer.tex}}"
-                   ("\\section{%s}" . "\\section*{%s}")
-                   ("\\subsection{%s}" . "\\subsection*{%s}")
-                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+    (setq org-latex-compiler "lualatex"
+          org-latex-pdf-process
+          '("lualatex --shell-escape --interaction=nonstopmode --output-directory %o %f"
+            "lualatex --shell-escape --interaction=nonstopmode --output-directory %o %f"))
 
-    (setq org-latex-pdf-process
-          '("lualatex --shell-escape --interaction nonstopmode --output-directory %o %f"
-            "lualatex --shell-escape --interaction nonstopmode --output-directory %o %f"))
+    (add-to-list
+     'org-latex-classes
+     '("notes"
+       "\\documentclass[11pt,a4paper]{article}
+  \\input{@template-dir@/notes.tex}
+  [no-default-packages]
+  [packages]
+  [extra]
+  \\AtEndDocument{\\input{@template-dir@/notes-footer.tex}}"
+       ("\\section{%s}" . "\\section*{%s}")
+       ("\\subsection{%s}" . "\\subsection*{%s}")
+       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+
+    (defun my/org-notes-option-true-p (value)
+      "Return non-nil when VALUE represents an enabled Org option."
+      (member (downcase (format "%s" value))
+              '("t" "true" "yes" "1")))
 
     (defun my/org-latex-notes-filter (output backend info)
+      "Insert notes-template settings into exported LaTeX."
       (when (and (org-export-derived-backend-p backend 'latex)
                  (string= (plist-get info :latex-class) "notes"))
-        (replace-regexp-in-string
-         "\\\\begin{document}"
-         (format "\\\\newcommand{\\\\subject}{%s}\n\\\\begin{document}"
-                 (plist-get info :subject))
-         output)))
+        (let* ((subject    (org-latex-plain-text
+                            (format "%s" (or (plist-get info :subject) ""))
+                            info))
+               (subtitle   (or (org-export-data (plist-get info :subtitle) info) ""))
+               (toc        (my/org-notes-option-true-p (plist-get info :notes-toc)))
+               (glossary   (my/org-notes-option-true-p (plist-get info :notes-glossary)))
+               (todo       (my/org-notes-option-true-p (plist-get info :notes-todo)))
+               (draft      (my/org-notes-option-true-p (plist-get info :isdraft)))
+               (widetitles (my/org-notes-option-true-p (plist-get info :notes-widetitles)))
+               (titlepage  (my/org-notes-option-true-p (plist-get info :notes-titlepage)))
+               (settings
+                (concat
+                 (format "\\def\\NotesSubject{%s}\n"   subject)
+                 (format "\\def\\NotesSubtitle{%s}\n"  subtitle)
+                 (format "\\NotesTOC%s\n"              (if toc        "true" "false"))
+                 (format "\\NotesGlossary%s\n"         (if glossary   "true" "false"))
+                 (format "\\NotesTodo%s\n"             (if todo       "true" "false"))
+                 (format "\\NotesDraft%s\n"            (if draft      "true" "false"))
+                 (format "\\NotesWideTitles%s\n"       (if widetitles "true" "false"))
+                 (format "\\NotesTitlePage%s\n"        (if titlepage  "true" "false"))
+                 "\\begin{document}")))
+          (replace-regexp-in-string
+           "\\\\begin{document}"
+           settings
+           output
+           t
+           t))))
 
     (add-hook 'org-export-filter-final-output-functions
               #'my/org-latex-notes-filter))
@@ -280,6 +303,345 @@ Add the Graphviz package and make it so inline images render correctly when eval
 
 #+RESULTS:
 | notes | \documentclass[11pt, a4paper]{article} |
+
+** Literate C projects
+#+begin_src emacs-lisp
+(require 'cl-lib)
+(require 'ob-C)
+
+;;; ── Execution: inject main() when :function and :arguments are present ───────
+
+(defun my/org-c--execute-function (original body params)
+  "Execute BODY with a generated main() when :function and :arguments exist."
+  (let ((function  (cdr (assq :function  params)))
+        (arguments (cdr (assq :arguments params))))
+    (if (and function arguments)
+        (funcall
+         original
+         (concat body
+                 "\nint main(void)\n"
+                 "{\n"
+                 "    " function "(" (string-trim arguments) ");\n"
+                 "    return 0;\n"
+                 "}\n")
+         params)
+      (funcall original body params))))
+
+(advice-remove 'org-babel-execute:C #'my/org-c--execute-function)
+(advice-add    'org-babel-execute:C :around #'my/org-c--execute-function)
+
+;;; ── Tangle: suppress :includes so it never appears in tangled output ─────────
+;;; ob-C expands :includes into #include lines inside org-babel-expand-body:C.
+;;; We strip :includes from params during tangle only, leaving execution intact.
+
+(defun my/org-c--strip-includes-for-tangle (original body params)
+  "Remove :includes from PARAMS when tangling, then call ORIGINAL."
+  (funcall original body (assq-delete-all :includes (copy-sequence params))))
+
+(advice-remove 'org-babel-expand-body:C #'my/org-c--strip-includes-for-tangle)
+(advice-add    'org-babel-expand-body:C :around #'my/org-c--strip-includes-for-tangle)
+
+;;; ── Helpers ──────────────────────────────────────────────────────────────────
+
+(defun my/org-c--section (headline)
+  "Return HEADLINE's direct section node, or nil."
+  (cl-find-if
+   (lambda (node) (eq (org-element-type node) 'section))
+   (org-element-contents headline)))
+
+(defun my/org-c--format-comment (text)
+  "Format TEXT as a C block comment."
+  (concat
+   "/*\n"
+   (mapconcat
+    (lambda (line) (concat " * " line))
+    (split-string text "\n")
+    "\n")
+   "\n */"))
+
+(defun my/org-c--tangle-target (block)
+  "Return BLOCK's absolute tangle target, or nil when it is not tangled."
+  (save-excursion
+    (goto-char (org-element-property :begin block))
+    (let ((target (cdr (assq :tangle
+                             (nth 2 (org-babel-get-src-block-info 'light))))))
+      (cond
+       ((or (null target) (string= target "no")) nil)
+       ((string= target "yes")
+        (user-error "Use an explicit :tangle filename for :c_comment: headings"))
+       (t (expand-file-name target (file-name-directory buffer-file-name)))))))
+
+;;; ── Comment collection: ALL prose+block pairs in each :c_comment: heading ───
+
+(defun my/org-c--block-comment-pairs (section)
+  "Return a list of (FILE COMMENT FUNC-NAME) for every C src-block in SECTION.
+COMMENT is the prose before the block, FUNC-NAME is derived from :function
+param or by parsing the first function definition in the block body."
+  (let (pairs pending-prose)
+    (dolist (node (org-element-contents section))
+      (pcase (org-element-type node)
+        ('paragraph
+         (setq pending-prose
+               (string-trim
+                (concat (or pending-prose "")
+                        (org-element-interpret-data node)))))
+        ('src-block
+         (when (string= (org-element-property :language node) "C")
+           (let* ((file      (my/org-c--tangle-target node))
+                  (body      (org-element-property :value node))
+                  (info      (save-excursion
+                               (goto-char (org-element-property :begin node))
+                               (org-babel-get-src-block-info 'light)))
+                  (params    (nth 2 info))
+                  (func-name (or (cdr (assq :function params))
+                                 ;; Fall back: first C function signature
+                                 (when (string-match
+                                        (rx bol
+                                            (* (not (any "/")))
+                                            (group (+ (any alnum "_")))
+                                            (* space) "(")
+                                        body)
+                                   (match-string 1 body)))))
+             (when (and file func-name
+                        pending-prose
+                        (not (string-empty-p pending-prose)))
+               (push (list file
+                           (my/org-c--format-comment pending-prose)
+                           func-name)
+                     pairs)))
+           (setq pending-prose nil)))))
+    (nreverse pairs)))
+
+(defun my/org-c--collect-comments ()
+  "Return a list of (FILE COMMENT FUNC-NAME) for all :c_comment: headings."
+  (let (entries)
+    (org-element-map
+        (org-element-parse-buffer)
+        'headline
+      (lambda (headline)
+        (when (member "c_comment" (org-element-property :tags headline))
+          (let* ((title   (org-element-property :raw-value headline))
+                 (section (my/org-c--section headline)))
+            (unless section
+              (user-error ":c_comment: heading has no section: %s" title))
+            (dolist (entry (my/org-c--block-comment-pairs section))
+              (push entry entries))))))
+    (nreverse entries)))
+
+;;; ── Tangle + post-process ────────────────────────────────────────────────────
+
+(defun my/org-c--normalize-blank-lines (content)
+  "Collapse runs of 3+ blank lines down to exactly one blank line."
+  (replace-regexp-in-string "\n\n\n+" "\n\n" content))
+
+(defun my/org-c--insert-comment-above-function (content comment func-name)
+  "Return CONTENT with COMMENT inserted above FUNC-NAME's definition."
+  (with-temp-buffer
+    (insert content)
+    (goto-char (point-min))
+    ;; Match the function return type + name on one line, e.g. "int add("
+    (when (re-search-forward
+           (concat "^[^\n/][^\n]*\\b"
+                   (regexp-quote func-name)
+                   "\\s-*(")
+           nil t)
+      (beginning-of-line)
+      (insert comment "\n"))
+    (buffer-string)))
+
+(defun my/org-tangle-c-project ()
+  "Tangle this Org file and insert :c_comment: comments above each function."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Save the Org file before tangling"))
+  (let ((entries (my/org-c--collect-comments)))
+    (org-babel-tangle)
+    ;; Group entries by file.
+    (let ((by-file (make-hash-table :test #'equal)))
+      (dolist (entry entries)
+        (pcase-let ((`(,file ,comment ,func) entry))
+          (puthash file
+                   (append (gethash file by-file) (list (cons comment func)))
+                   by-file)))
+      (maphash
+       (lambda (file comment-func-pairs)
+         (unless (file-exists-p file)
+           (user-error "Expected tangled file was not created: %s" file))
+         (let ((content (with-temp-buffer
+                          (insert-file-contents file)
+                          (buffer-string))))
+           (setq content (my/org-c--normalize-blank-lines content))
+           (dolist (pair comment-func-pairs)
+             (setq content
+                   (my/org-c--insert-comment-above-function
+                    content (car pair) (cdr pair))))
+           (with-temp-buffer
+             (insert content)
+             (write-region (point-min) (point-max) file nil 'silent))))
+       by-file))))
+
+;;; ── Build & run ──────────────────────────────────────────────────────────────
+
+(defun my/org-tangle-and-build-c-project ()
+  "Tangle the current C project, then build it with code/Makefile."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Save the Org file before tangling"))
+  (let* ((org-file buffer-file-name)
+         (code-directory (expand-file-name "code/"
+                                           (file-name-directory org-file))))
+    (my/org-tangle-c-project)
+    (unless (file-exists-p (expand-file-name "Makefile" code-directory))
+      (user-error "Tangling did not create %s"
+                  (expand-file-name "Makefile" code-directory)))
+    (let ((default-directory        code-directory)
+          (compilation-scroll-output 'first-error))
+      (compile "make"))))
+
+(defun my/org-run-c-project ()
+  "Run the compiled program from the current Org project's code directory."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Save the Org file before running the project"))
+  (let* ((code-directory (expand-file-name "code/"
+                                           (file-name-directory buffer-file-name)))
+         (program (expand-file-name "program" code-directory)))
+    (unless (file-exists-p program)
+      (user-error "No compiled program exists at %s; run SPC m t b first"
+                  program))
+    (unless (file-executable-p program)
+      (user-error "Program is not executable: %s" program))
+    (let ((default-directory code-directory))
+      (compilation-start "./program" 'compilation-mode
+                         (lambda (_mode) "*C program*")))))
+
+;;; ── Keybindings ──────────────────────────────────────────────────────────────
+
+(my-leader-def 'normal 'org-mode-map
+  "mt"  '("Tangle"           . (keymap))
+  "mtp" '("Tangle project"   . my/org-tangle-c-project)
+  "mtb" '("Tangle and build" . my/org-tangle-and-build-c-project)
+  "mtr" '("Run program"      . my/org-run-c-project))
+#+end_src
+
+** school sessions
+#+begin_src emacs-lisp
+      (require 'seq)
+
+      (defvar my/school-root (expand-file-name "~/documents/school/"))
+
+      (defun my/school-notes-header ()
+        (concat
+         "#+title: ${1:`(read-string \"title: \" (format-time-string \"%y-%m-%d\"))`}\n"
+         "#+author: ${2:`(read-string \"author: \" user-full-name)`}\n"
+         "#+date: `(format-time-string \"%y-%m-%d\")`\n"
+         "#+subject: %subject%\n"
+         "#+latex_class: notes\n"
+         "#+export_file_name: document/notes\n\n"
+         "#+notes_toc: false\n"
+         "#+notes_glossary: false\n"
+         "#+notes_todo: false\n"
+         "#+isdraft: true\n"
+         "#+notes_titlepage: false\n"))
+
+      (defun my/school-notes-template ()
+        (concat
+         (my/school-notes-header)
+         "\n* ${3:notes}\n\n$0"))
+
+      (defun my/school-python-notes-template ()
+        (concat
+         (my/school-notes-header)
+         "\n* ${3:notes}\n\n"
+         "* code\n\n"
+         "#+begin" "_src python :tangle code/main.py :mkdirp yes\n"
+         "$0\n"
+         "#+end" "_src"))
+
+  (defun my/school-c-notes-template ()
+   (concat
+    (my/school-notes-header)
+    "\n* makefile\n\n"
+    "#+begin" "_src makefile :mkdirp t :tangle code/makefile\n"
+    "${3:"
+    "cc      := gcc\n"
+    "cflags  := -std=c17 -wall -wextra -wpedantic\n"
+    "target  := program\n"
+    "objs    := main.o arithmetic.o\n"
+    "\n"
+    "\\$(target): \\$(objs)\n"
+    "\t\\$(cc) \\$(cflags) -o \\$@ \\$^\n"
+    "\n"
+    "main.o: main.c arithmetic.h\n"
+    "arithmetic.o: arithmetic.c arithmetic.h\n"
+    "\n"
+    "clean:\n"
+    "\trm -f \\$(target) \\$(objs)\n"
+    "}\n"
+    "#+end" "_src\n"
+    "\n"
+    "* main.c :c_comment:\n"
+    ":properties:\n"
+    ":header-args:c: :main no :mkdirp t :flags -icode :results output :tangle code/main.c\n"
+    ":end:\n"
+    "#+begin" "_src\n"
+    "$4\n"
+    "#+end" "_src\n"))
+
+
+  (defvar my/school-templates
+    '(("notes" . my/school-notes-template)
+      ("c notes" . my/school-c-notes-template)
+      ("python notes" . my/school-python-notes-template)))
+
+  (defun my/school-subjects ()
+    (when (file-directory-p my/school-root)
+      (seq-filter
+       (lambda (name)
+         (file-directory-p (expand-file-name name my/school-root)))
+       (directory-files my/school-root nil directory-files-no-dot-files-regexp))))
+
+  (defun my/school-read-subject ()
+    (let ((subject
+           (string-trim
+            (completing-read "subject: " (my/school-subjects) nil nil))))
+      (when (or (string-empty-p subject)
+                (string-match-p "[/\\\\]" subject))
+        (user-error "subject must be non-empty and contain no path separator"))
+      subject))
+
+  (defun my/school-read-template ()
+    (completing-read "template: " (mapcar #'car my/school-templates) nil t))
+
+  (defun my/school-template-body (template subject)
+    (replace-regexp-in-string
+     "%subject%"
+     subject
+     (funcall (alist-get template my/school-templates nil nil #'string=))
+     t
+     t))
+
+  (defun my/school-session ()
+    (interactive)
+    (let* ((subject (my/school-read-subject))
+           (template (my/school-read-template))
+           (directory
+            (expand-file-name
+             (concat subject "/" (format-time-string "%y-%m-%d") "/")
+             my/school-root))
+           (notes-file (expand-file-name "notes.org" directory)))
+      ;; should be created automatically
+      ;;(make-directory (expand-file-name "code" directory) t)
+      (make-directory (expand-file-name "document" directory) t)
+      (find-file notes-file)
+      (when (= (buffer-size) 0)
+        (yas-expand-snippet
+         (my/school-template-body template subject)))))
+
+  (my-leader-def 'normal 'global
+    "n" '("notes" . (keymap))
+    "n n" '("new school session" . my/school-session))
+#+end_src
 
 ** PDF Reader
 #+begin_src emacs-lisp
@@ -289,6 +651,8 @@ Add the Graphviz package and make it so inline images render correctly when eval
 
 * Language Configuration
 ** LSP
+~%dep%+{clang-tools}~
+~%dep%+{clang-tools}~
 #+begin_src emacs-lisp
   ; Set nil as an addon
     (use-package lsp-mode
@@ -300,6 +664,7 @@ Add the Graphviz package and make it so inline images render correctly when eval
             (rust-mode . lsp)
             (slint-mode . lsp)
             (nix-mode . lsp)
+            (c-mode . lsp)
             ;; if you want which-key integration
             (lsp-mode . lsp-enable-which-key-integration))
      :commands lsp
@@ -379,6 +744,7 @@ I am doing completion using the lovely Corfu
   (use-package corfu
      :ensure t
      :demand t
+     :after yasnippet
      :general
      (:states 'insert :keymaps 'corfu-map
                "RET"     nil
@@ -404,7 +770,10 @@ I am doing completion using the lovely Corfu
      (corfu-history-mode)
      (corfu-popupinfo-mode)
      (advice-add 'corfu--setup :after (lambda (&rest _) (evil-normalize-keymaps)))
-     (advice-add 'corfu--teardown :after (lambda (&rest _) (evil-normalize-keymaps))))
+     (advice-add 'corfu--teardown :after (lambda (&rest _) (evil-normalize-keymaps)))
+
+     (define-key corfu-map (kbd "<RET>") nil))
+     
   #+end_src
 
   #+begin_src emacs-lisp
@@ -415,7 +784,7 @@ I am doing completion using the lovely Corfu
       ;; (completion-cycle-threshold 3)
 
       ;; Enable indentation+completion using the TAB key.
-      ;; `completion-at-point' is often bound to M-TAB.
+      ;;completion-at-point' is often bound to M-TAB.
       (tab-always-indent 'complete)
       (completion-cycle-threshold nil)      ; Always show all candidates in popup menu
 
@@ -431,10 +800,11 @@ I am doing completion using the lovely Corfu
       ;; Add extensions
     (use-package cape
       :bind ("C-c p" . cape-prefix-map)
+      :after (corfu yasnippet)
       :init
       ;; Add merged CAPF for standard (non-LSP) buffers
       (add-hook 'completion-at-point-functions
-                (cape-capf-super #'yasnippet-capf #'cape-dabbrev)
+                (cape-capf-super #'yasnippet-capf #'cape-history #'cape-file)
                 -100) ; Higher priority
       (add-hook 'completion-at-point-functions #'cape-file)
       (add-hook 'completion-at-point-functions #'cape-elisp-block)

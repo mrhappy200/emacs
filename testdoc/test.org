@@ -1,17 +1,35 @@
-#+title: Notes
-#+author: Ronan Berntsen
-#+date: 2026-08-29
-#+language: English
-
-#+subject: Latex 101
+#+TITLE:             Notes
+#+SUBTITLE:          My notes on the topic
+#+AUTHOR:            Ronan berntsen
+#+DATE:              2026-09-02
+#+SUBJECT:           \LaTeX 101
+#+NOTES_TOC:         false
+#+NOTES_GLOSSARY:    false
+#+NOTES_TODO:        true
+#+ISDRAFT:           true
+#+NOTES_WIDE_TITLES: false
+#+NOTES_TITLEPAGE:   false
 
 #+LATEX_CLASS: notes
+
 #+LATEX_COMPILER: lualatex
 
-#+LATEX_HEADER: \usepackage{draftwatermark}
-#+LATEX_HEADER: \SetWatermarkText{DRAFT}
-#+LATEX_HEADER: \SetWatermarkScale{0.6}
-#+LATEX_HEADER: \SetWatermarkLightness{0.9}
+* Custom box testing
+\begin{infobox}
+  This is general information the reader should be aware of.
+\end{infobox}
+
+\begin{notebox}
+  A helpful clarification or supplementary detail.
+\end{notebox}
+
+\begin{warningbox}
+  Something that may cause unexpected behaviour if ignored.
+\end{warningbox}
+
+\begin{dangerbox}
+  A critical issue — data loss or irreversible consequences possible.
+\end{dangerbox}
 
 * Ink.el testing
 

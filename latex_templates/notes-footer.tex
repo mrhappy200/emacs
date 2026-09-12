@@ -2,12 +2,18 @@
 
 \printbibliography
 \setglossarystyle{list}
+
+\ifNotesGlossary
 \printnoidxglossaries
+\fi
+
+\ifNotesTodo
 \ifprint
 \immediate\closeout\todofile
 \else
 \immediate\closeout\todofile
 \listoftodos
+\fi
 \fi
 
 %\renewcommand{\appendixname}{Bijlage}

@@ -2,6 +2,23 @@
 \newif\ifprint\printfalse
 %\documentclass[twoside]{article}
 
+% Values supplied by the Org export filter.
+\newcommand{\NotesSubject}{}
+
+\newif\ifNotesTOC
+\newif\ifNotesGlossary
+\newif\ifNotesTodo
+\newif\ifNotesDraft
+
+\NotesTOCfalse
+\NotesGlossaryfalse
+\NotesTodofalse
+\NotesDraftfalse
+
+\ifNotesDraft
+  \isdrafttrue
+\fi
+
 % Plots
 \usepackage[x11names,svgnames,table]{xcolor}
 \usepackage{tikz,pgfplots,pgfplotstable}
@@ -131,10 +148,12 @@
 \fi
 
 % Watermark
-% \usepackage{draftwatermark}
-% \SetWatermarkText{TECHNASIUM}
-% \SetWatermarkScale{0.6}
-% \SetWatermarkLightness{0.9}
+\ifisdraft
+\usepackage{draftwatermark}
+\SetWatermarkText{DRAFT}
+\SetWatermarkScale{0.6}
+\SetWatermarkLightness{0.9}
+\fi
 
 % Frontmatter, Mainmatter, and Backmatter
 \makeatletter
@@ -202,10 +221,6 @@
    \usepackage[cal=boondoxo]{mathalfa} % mathcal from STIX, unslanted a bit
    \renewcommand*\oldstylenums[1]{\textosf{#1}}
   \fi
-
-
-
-
 
 % Bibliography
 \usepackage[
@@ -281,9 +296,6 @@ incolumn,
 % We want stuff like the TOC and the bibliography included in the TOC
 \usepackage{tocbibind}
 
-% Gifs
-\usepackage{animate}
-
 % Tables
 \usepackage{booktabs}
 
@@ -299,12 +311,136 @@ incolumn,
 
 \usepackage{titling}
 
+%  Info warning error boxes
+% ── Dependencies ────────────────────────────────────────────────────────────
+\usepackage[most]{tcolorbox}
+\usepackage{fontawesome5}
+
+% ── Nord Aurora colour definitions ───────────────────────────────────────────
+\definecolor{NordRed}    {HTML}{BF616A}
+\definecolor{NordOrange} {HTML}{D08770}
+\definecolor{NordYellow} {HTML}{EBCB8B}
+\definecolor{NordGreen}  {HTML}{A3BE8C}
+\definecolor{NordPurple} {HTML}{5e81ac}
+
+% Light fills (mixed with white) ──────────────────────────────────────────────
+\colorlet{InfoFill}   {NordPurple!15!white}
+\colorlet{NoteFill}   {NordGreen!15!white}
+\colorlet{WarnFill}   {NordYellow!25!white}
+\colorlet{DangerFill} {NordRed!15!white}
+
+% ── Base style ───────────────────────────────────────────────────────────────
+\tcbset{
+  notesbox/.style 2 args={
+    enhanced,
+    shield externalize,
+    arc=4pt,
+    colback=#2,
+    colframe=#1,
+    boxrule=1pt,
+    left=10pt, right=10pt, top=6pt, bottom=6pt,
+    attach boxed title to top center={yshift=-3mm, yshifttext=-1mm},
+    boxed title style={
+      arc=3pt,
+      size=small,
+      colframe=#1,
+      colback=#1,
+    },
+    fonttitle=\bfseries,
+    coltitle=white,
+  }
+}
+
+% ── Four environments ─────────────────────────────────────────────────────────
+\newtcolorbox{infobox}{
+  notesbox={NordPurple}{InfoFill},
+  title={\faInfoCircle\enspace Info},
+}
+
+\newtcolorbox{notebox}{
+  notesbox={NordGreen}{NoteFill},
+  title={\faStickyNote\enspace Note},
+}
+
+\newtcolorbox{warningbox}{
+  notesbox={NordYellow}{WarnFill},
+  title={\faExclamationTriangle\enspace Warning},
+}
+
+\newtcolorbox{dangerbox}{
+  notesbox={NordRed}{DangerFill},
+  title={\faExclamationCircle\enspace Danger},
+}
+
 % lipsum rood maken
 \NewCommandCopy{\oldlipsum}{\lipsum}
 \renewcommand{\lipsum}[1][1]{\fout[_VAR_ Lipsum (\immediate\currentname)]{\oldlipsum[#1]}}
 
 \makeatletter
-\def\fulltitle{\subject\,---\,\thetitle\,---\,\thedate}
+\def\fulltitle{\NotesSubject\,---\,\thetitle\,---\,\thedate}
+\makeatother
+
+% Custom title setup
+
+\newif\ifNotesTitlePage
+\NotesTitlePagefalse          % default: compact header
+
+\def\NotesSubject{}
+\def\NotesSubtitle{}
+
+\makeatletter
+\newcommand{\NotesCompactTitle}{%
+  \begingroup
+    \centering
+    {\Large\bfseries\@maintitle\par}
+    \ifx\NotesSubtitle\empty\else
+      \vskip 0.3em
+      {\large\itshape\NotesSubtitle\par}
+    \fi
+    \ifx\NotesSubject\empty\else
+      \vskip 0.2em
+      {\normalsize\NotesSubject\par}
+    \fi
+    \vskip 0.3em
+    {\small\@author\quad\textbar\quad\@date\par}
+  \endgroup
+  \vskip 1.5em
+  \noindent\rule{\linewidth}{0.4pt}
+  \vskip 1.5em
+}
+
+\newcommand{\NotesTitlePageFull}{%
+  \begin{titlepage}
+    \centering
+    \vspace*{\fill}
+    \noindent\rule{\linewidth}{1pt}
+    \vskip 1em
+    {\Huge\bfseries\@title\par}
+    \ifx\NotesSubtitle\empty\else
+      \vskip 0.6em
+      {\Large\itshape\NotesSubtitle\par}
+    \fi
+    \vskip 1em
+    \noindent\rule{\linewidth}{1pt}
+    \vskip 2em
+    \ifx\NotesSubject\empty\else
+      {\large\NotesSubject\par}
+      \vskip 1em
+    \fi
+    {\large\@author\par}
+    \vskip 0.5em
+    {\normalsize\@date\par}
+    \vspace*{\fill}
+  \end{titlepage}
+}
+
+\renewcommand{\maketitle}{%
+  \ifNotesTitlePage
+    \NotesTitlePageFull
+  \else
+    \NotesCompactTitle
+  \fi
+}
 \makeatother
 
 
@@ -329,12 +465,11 @@ incolumn,
 \setcounter{page}{1}
 \maketitle
 
-\clearpage
-\clearpage
-
-\clearpage
-\tableofcontents
-\clearpage
+\ifNotesTOC
+  \clearpage
+  \tableofcontents
+  \clearpage
+\fi
 
 \setcounter{page}{1}
 \mainmatter
