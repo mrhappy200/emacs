@@ -223,7 +223,6 @@ Add the Graphviz package and make it so inline images render correctly when eval
 #+begin_src emacs-lisp
   (with-eval-after-load 'ox
     (setq org-export-allow-bind-keywords t)
-    (setq org-export-with-title nil)
     (setq org-export-with-toc nil)
 
     (add-to-list 'org-export-options-alist
@@ -243,22 +242,34 @@ Add the Graphviz package and make it so inline images render correctly when eval
 
   (with-eval-after-load 'ox-latex
     (setq org-latex-compiler "lualatex"
-          org-latex-pdf-process
-          '("lualatex --shell-escape --interaction=nonstopmode --output-directory %o %f"
-            "lualatex --shell-escape --interaction=nonstopmode --output-directory %o %f"))
-
-    (add-to-list
-     'org-latex-classes
-     '("notes"
-       "\\documentclass[11pt,a4paper]{article}
-  \\input{@template-dir@/notes.tex}
-  [no-default-packages]
-  [packages]
-  [extra]
-  \\AtEndDocument{\\input{@template-dir@/notes-footer.tex}}"
-       ("\\section{%s}" . "\\section*{%s}")
-       ("\\subsection{%s}" . "\\subsection*{%s}")
-       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+      org-latex-pdf-process
+      '("cd %o && texcount -1 -sum=1,1,1,0,0,1,1. -merge -q -nobib %b.tex > %b-words.sum 2>%b-words.sum.log"
+        "cd %o && latexmk -lualatex -shell-escape -interaction=nonstopmode %b.tex"))
+  
+    (with-eval-after-load 'ox-latex
+     (add-to-list 'org-latex-classes
+                  '("notes"
+                    "\\documentclass[11pt,a4paper]{article}
+        \\input{@template-dir@/notes.tex}
+        [no-default-packages]
+        [packages]
+        [extra]
+        \\AtEndDocument{\\input{@template-dir@/notes-footer.tex}}"
+                    ("\\section{%s}" . "\\section*{%s}")
+                    ("\\subsection{%s}" . "\\subsection*{%s}")
+                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+     (add-to-list 'org-latex-classes
+                  '("kidi"
+                    "\\documentclass[11pt,a4paper]{@template-dir@/uva-inf-article}
+        \\input{@template-dir@/kidi.tex}
+        \\graphicspath{{@template-dir@/images/}}
+        [no-default-packages]
+        [packages]
+        [extra]
+        \\AtEndDocument{\\input{@template-dir@/kidi-footer.tex}}"
+                    ("\\section{%s}" . "\\section*{%s}")
+                    ("\\subsection{%s}" . "\\subsection*{%s}")
+                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
 
     (defun my/org-notes-option-true-p (value)
       "Return non-nil when VALUE represents an enabled Org option."
@@ -297,8 +308,19 @@ Add the Graphviz package and make it so inline images render correctly when eval
            t
            t))))
 
-    (add-hook 'org-export-filter-final-output-functions
-              #'my/org-latex-notes-filter))
+   (defun my/org-latex-configure-for-class (backend)
+     "Set export options based on #+latex_class."
+     (when (org-export-derived-backend-p backend 'latex)
+       (let ((class (or (car (plist-get (org-export--get-inbuffer-options) :latex-class))
+                        "")))
+         (if (string= class "notes")
+             (setq-local org-export-with-title nil)
+           (setq-local org-export-with-title t)))))
+
+   (add-hook 'org-export-before-processing-hook #'my/org-latex-configure-for-class)
+
+   (add-hook 'org-export-filter-final-output-functions
+             #'my/org-latex-notes-filter))
 #+end_src
 
 #+RESULTS:
@@ -528,7 +550,7 @@ param or by parsing the first function definition in the block body."
 #+begin_src emacs-lisp
       (require 'seq)
 
-      (defvar my/school-root (expand-file-name "~/documents/school/"))
+      (defvar my/school-root (expand-file-name "~/Documents/School/"))
 
       (defun my/school-notes-header ()
         (concat

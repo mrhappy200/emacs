@@ -8,7 +8,7 @@
 #+NOTES_TODO:        true
 #+ISDRAFT:           true
 #+NOTES_WIDE_TITLES: false
-#+NOTES_TITLEPAGE:   false
+#+NOTES_TITLEPAGE:   true
 
 #+LATEX_CLASS: notes
 
