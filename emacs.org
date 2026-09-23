@@ -8,40 +8,65 @@ This is the syntax I use for adding dependencies in the file. Sadly it does use 
 * Basic setup
 We are going to turn off the startup message, enable a bell for when we hit file borders, remove unnessesary UI elements, and enable line numbers
 #+begin_src emacs-lisp
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (setq gc-cons-threshold (* 32 1024 1024)
+                    gc-cons-percentage 0.1)))
+    
+  (use-package benchmark-init
+   :ensure t
+   :config
+  ;; To disable collection of benchmark data after init is done.
+   (add-hook 'after-init-hook 'benchmark-init/deactivate))
+
+  (defun my-battery-present-p ()
+    "Return non-nil when a battery is present and detected."
+    (and (boundp 'battery-status-function)
+         battery-status-function
+         (not (string-match-p
+               "N/A"
+               (battery-format "%B"
+                               (funcall battery-status-function))))))
+
+  (run-with-idle-timer
+   1 nil
+   (lambda ()
+     (require 'battery)
+     (when (my-battery-present-p)
+       (display-battery-mode 1))))
+
   (use-package doom-themes
-  :ensure t
-  :demand t
-  :init
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t
-        doom-themes-treemacs-theme "doom-gruvbox")
-  :config
-  (load-theme 'doom-gruvbox t)
-  (doom-themes-visual-bell-config)
-  (doom-themes-neotree-config)
-  (doom-themes-treemacs-config)
-  (doom-themes-org-config))
+   :ensure t
+   :demand t
+   :init
+   (setq doom-themes-enable-bold t
+         doom-themes-enable-italic t)
+         
+   :config
+   (load-theme 'doom-gruvbox t)
+   (doom-themes-visual-bell-config)
+   (doom-themes-org-config))
   (setq inhibit-startup-message t
-        visible-bell t)
-  (menu-bar-mode -1)
-  (tool-bar-mode -1)
-  (scroll-bar-mode -1)
+      visible-bell t)
   (blink-cursor-mode -1)
+
   (setq display-line-numbers-type 'relative)
+  (add-hook 'prog-mode-hook #'display-line-numbers-mode)
+  (add-hook 'conf-mode-hook #'display-line-numbers-mode)
+  (add-hook 'text-mode-hook #'display-line-numbers-mode)
 
-  (global-display-line-numbers-mode 1)
-  (use-package vterm
-    :ensure t)
-
-  ;; Stop the split screen when opening emacs with a filename argument
+    ;; Stop the split screen when opening emacs with a filename argument
 
   (add-hook 'emacs-startup-hook
             (lambda () (delete-other-windows)))
-  ;; no indent-tabs-mode for me
+    ;; no indent-tabs-mode for me
   (setq-default indent-tabs-mode nil)
-  ;; MELPA
+    ;; MELPA
   (add-to-list 'package-archives '("melpa-snapshots" . "https://snapshots.melpa.org/packages/") t)
  #+end_src
+
+#+RESULTS:
+: ((gnu . https://elpa.gnu.org/packages/) (nongnu . https://elpa.nongnu.org/nongnu/) (melpa-snapshots . https://snapshots.melpa.org/packages/))
 
 * EVIL mode
 #+begin_src emacs-lisp
@@ -96,15 +121,16 @@ We are going to turn off the startup message, enable a bell for when we hit file
   (message "emms start")
   (use-package emms
     :defer t
-    :commands (emms
-               emms-browser
-               emms-smart-browse
-               emms-playlist-mode-go
-               emms-pause
-               emms-stop
-               emms-next
-               emms-previous
-               emms-shuffle)
+   :commands (emms
+              emms-browser
+              emms-smart-browse
+              emms-playlist-mode-go
+              emms-pause
+              emms-stop
+              emms-next
+              emms-previous
+              emms-shuffle
+              emms-player-mpd-update-all-reset-cache)
     :init
     
     (setq emms-source-file-default-directory "~/Music"
@@ -115,8 +141,8 @@ We are going to turn off the startup message, enable a bell for when we hit file
     :config
     (emms-all)
     (emms-default-players)
-    (emms-mode-line-mode 1)
-    (emms-playing-time-mode 1)
+    (emms-mode-line-mode nil)
+    (emms-playing-time-display-mode -1)
 
     (setq emms-player-mpd-supported-regexp
           "\\`http[s]?://\\|\\.\\(?:[Mm]3[Uu]\\|[Oo][Gg][Gg]\\|[Ff][Ll][Aa][Cc]\\|[Mm][Pp]3\\|[Ww][Aa][Vv]\\|[Mm][Oo][Dd]\\|[Aa][Uu]\\|[Aa][Ii][Ff][Ff]\\|[Oo][Pp][Uu][Ss]\\)\\'")
@@ -168,47 +194,11 @@ We are going to turn off the startup message, enable a bell for when we hit file
 #+RESULTS:
 : emms done
 
-** COMMENT EMMS
-#+begin_src emacs-lisp :tangle yes
-  (use-package emms
-    :ensure t
-    :commands (emms emms-smart-browse emms-player-mpd-update-all-reset-cache)
-    :config
-    (require 'emms-setup)
-    (require 'emms-player-mpd)
-    (emms-all) ; don't change this to values you see on stackoverflow questions if you expect emms to work
-    (setq emms-seek-seconds 5)
-    (setq emms-player-list '(emms-player-mpd))
-    (setq emms-info-functions '(emms-info-mpd))
-    (setq emms-player-mpd-server-name "localhost")
-    (setq emms-player-mpd-server-port "6600")
-    (setq emms-player-mpd-supported-regexp
-          "\\`http[s]?://\\|\\.\\(?:[Mm]3[Uu]\\|[Oo][Gg][Gg]\\|[Ff][Ll][Aa][Cc]\\|[Mm][Pp]3\\|[Ww][Aa][Vv]\\|[Mm][Oo][Dd]\\|[Aa][Uu]\\|[Aa][Ii][Ff][Ff]\\|[Oo][Pp][Uu][Ss]\\)\\'")
-
-    (emms-player-set emms-player-mpd 'regex
-                     emms-player-mpd-supported-regexp)
-
-    (add-to-list 'emms-player-list 'emms-player-mpd)
-
-     (my-leader-def 'normal 'global
-           "M" '("Media" . (keymap))
-           "M p" '("Playlist" . emms)
-           "M M" '("Open EMMS" . emms-smart-browse)
-           "M r" '("Reload MPD library" . emms-player-mpd-update-all-reset-cache)))
-#+end_src
-
-*** MPC Setup
-#+begin_src emacs-lisp :tangle yes
-(setq mpc-host "localhost:6600")
-#+end_src
-
 ** Rainbow delimiters and electric pairs
 #+begin_src emacs-lisp
   (use-package rainbow-delimiters
    :ensure t
-   :hook (prog-mode . rainbow-delimiters-mode)
-   :init
-   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+   :hook (prog-mode . rainbow-delimiters-mode))
 
 (defun my/enable-electric-pairs-unless-parinfer ()
   "Enable electric pairs except in modes managed by Parinfer."
@@ -245,36 +235,28 @@ We are going to turn off the startup message, enable a bell for when we hit file
 
 ** QOL editing and snippets
 #+begin_src emacs-lisp
-  (message "yas start")
   (use-package yasnippet
     :ensure t
-    ;:commands (
-    ;           'yas-insert-snippet
-    ;           'yas-expand
-    ;           )
-
     :defer t
     :hook ((prog-mode . yas-minor-mode)
-        (org-mode . yas-minor-mode))
-
+           (org-mode . yas-minor-mode))
     :general
     (:states '(insert normal)
-             "M-+" 'yas-expand
-             "M-*" 'yas-insert-snippet)
+             "M-+" #'yas-expand
+             "M-*" #'yas-insert-snippet)
+    :init
+    (setq yas-prompt-functions '(yas-completing-read-prompt)
+          yas-triggers-in-field nil)
     :config
     (add-to-list 'yas-snippet-dirs "@snippets@")
-    (add-to-list 'yas-snippet-dirs "~/Documents/Snippets")
-    (setq yas-prompt-functions '(yas-completing-read-prompt))
-    ;; Prevent field menu prompts from taking over the window layout
-    (setq yas-triggers-in-field nil)
-    (yas-global-mode 1))
+    (add-to-list 'yas-snippet-dirs "~/Documents/Snippets"))
 
   (use-package yasnippet-snippets
     :ensure t
     :after yasnippet
     :config
-    (yasnippet-snippets-initialize)
-    (yas-reload-all))
+    ;; Register the package's snippets once.
+    (yasnippet-snippets-initialize))
 
   (use-package yasnippet-capf
     :ensure t
@@ -377,18 +359,20 @@ We are going to turn off the startup message, enable a bell for when we hit file
 #+begin_src emacs-lisp
   (use-package solaire-mode
     :ensure t
-    :after doom-themes
-    :init
-    (solaire-global-mode +1))
+    :defer 1
+    :config
+    (solaire-global-mode 1))
 #+end_src
 ** Modeline
 #+begin_src emacs-lisp :tangle yes
   (use-package doom-modeline
     :ensure t
+    :defer 1
+    :init
+    (setq doom-modeline-enable-word-count nil
+          doom-modeline-spell t)
     :config
-    (setq doom-modeline-enable-word-count nil)
-    (setq  doom-modeline-spell nil)
-    :init (doom-modeline-mode 1))
+    (doom-modeline-mode 1))
 #+end_src
 
 * Org mode
@@ -404,13 +388,7 @@ We are going to turn off the startup message, enable a bell for when we hit file
   (setq org-highlight-latex-and-related '(native script entities))
   (setq org-src-fontify-natively t)
 
-  ;; Ensure babel languages are loaded after Org is ready
-  (with-eval-after-load 'org
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((dot . t)      ; activates dot
-       (C . t)      ; activates dot
-       (latex . t)))) ; activates latex
+
 #+end_src
 
 #+RESULTS:
@@ -624,10 +602,13 @@ Add the Graphviz package and make it so inline images render correctly when eval
 #+begin_src emacs-lisp
   (use-package ink
     :ensure nil
+    :commands (ink-make-figure
+               ink-duplicate-figure
+               ink-edit-figure)
     :config
     (my-local-leader-def
       :states '(normal)
-      :keymaps '(latex-mode-map org-mode-map)'
+      :keymaps '(latex-mode-map org-mode-map)
       "i" '("Inkscape figures" . (keymap))
       "i n" '("New figure (opens Inkscape)" . ink-make-figure)
       "i d" '("Duplicates figure (opens Inkscape)" . ink-duplicate-figure)
@@ -744,7 +725,11 @@ Add the Graphviz package and make it so inline images render correctly when eval
 ** Literate C projects
 #+begin_src emacs-lisp
   (require 'cl-lib)
-  (require 'ob-C)
+
+  (autoload 'org-babel-execute:C "ob-C" nil t)
+  (autoload 'org-babel-expand-body:C "ob-C" nil t)
+  (autoload 'org-babel-execute:dot "ob-dot" nil t)
+  (autoload 'org-babel-execute:latex "ob-latex" nil t)
 
   ;;; ── Execution: inject main() when :function and :arguments are present ───────
 
@@ -764,9 +749,6 @@ Add the Graphviz package and make it so inline images render correctly when eval
            params)
         (funcall original body params))))
 
-  (advice-remove 'org-babel-execute:C #'my/org-c--execute-function)
-  (advice-add    'org-babel-execute:C :around #'my/org-c--execute-function)
-
   ;;; ── Tangle: suppress :includes so it never appears in tangled output ─────────
   ;;; ob-C expands :includes into #include lines inside org-babel-expand-body:C.
   ;;; We strip :includes from params during tangle only, leaving execution intact.
@@ -775,8 +757,19 @@ Add the Graphviz package and make it so inline images render correctly when eval
     "Remove :includes from PARAMS when tangling, then call ORIGINAL."
     (funcall original body (assq-delete-all :includes (copy-sequence params))))
 
-  (advice-remove 'org-babel-expand-body:C #'my/org-c--strip-includes-for-tangle)
-  (advice-add    'org-babel-expand-body:C :around #'my/org-c--strip-includes-for-tangle)
+  (with-eval-after-load 'ob-C
+    ;; Safe when the configuration is re-evaluated.
+    (advice-remove 'org-babel-execute:C
+                   #'my/org-c--execute-function)
+    (advice-add 'org-babel-execute:C
+                :around
+                #'my/org-c--execute-function)
+
+    (advice-remove 'org-babel-expand-body:C
+                   #'my/org-c--strip-includes-for-tangle)
+    (advice-add 'org-babel-expand-body:C
+                :around
+                #'my/org-c--strip-includes-for-tangle))
 
   ;;; ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -953,12 +946,12 @@ Add the Graphviz package and make it so inline images render correctly when eval
                            (lambda (_mode) "*C program*")))))
 
   ;;; ── Keybindings ──────────────────────────────────────────────────────────────
-
-  (my-leader-def 'normal 'org-mode-map
-    "mt"  '("Tangle"           . (keymap))
-    "mtp" '("Tangle project"   . my/org-tangle-c-project)
-    "mtb" '("Tangle and build" . my/org-tangle-and-build-c-project)
-    "mtr" '("Run program"      . my/org-run-c-project))
+  (with-eval-after-load 'org
+    (my-leader-def 'normal 'org-mode-map
+      "mt"  '("Tangle"           . (keymap))
+      "mtp" '("Tangle project"   . my/org-tangle-c-project)
+      "mtb" '("Tangle and build" . my/org-tangle-and-build-c-project)
+      "mtr" '("Run program"      . my/org-run-c-project)))
 #+end_src
 
 ** school sessions
@@ -1107,7 +1100,7 @@ Add the Graphviz package and make it so inline images render correctly when eval
 #+begin_src emacs-lisp
   (message "language start")
   (use-package eglot
-    :ensure nil
+    :ensure t
     :hook ((rust-mode  . eglot-ensure)
            (slint-mode . eglot-ensure)
            (nix-mode   . eglot-ensure)
@@ -1151,17 +1144,28 @@ Add the Graphviz package and make it so inline images render correctly when eval
       "l a e" '("Extract" . eglot-code-action-extract)
       "l a i" '("Inline" . eglot-code-action-inline)
       "l a r" '("Rewrite" . eglot-code-action-rewrite)))
-
   (use-package dape
     :ensure t
-    :after eglot
-    :custom
-    ;; Do not install Dape's default GUD-style key prefix.
-    (dape-key-prefix nil)
-
-    ;; Keep source and debug buffers in a predictable side-by-side layout.
-    (dape-buffer-window-arrangement 'right)
-
+    :commands (dape
+               dape-restart
+               dape-disconnect-quit
+               dape-kill
+               dape-breakpoint-toggle
+               dape-breakpoint-remove-all
+               dape-continue
+               dape-pause
+               dape-next
+               dape-step-in
+               dape-step-out
+               dape-evaluate-expression
+               dape-inspect
+               dape-select-thread
+               dape-select-stack
+               dape-watch-dwim
+               dape-watch-remove)
+    :init
+    (setq dape-key-prefix nil
+          dape-buffer-window-arrangement 'right)
     :config
     ;; A debugging run uses the files on disk; offer to save modified buffers
     ;; before starting, rather than silently saving everything.
@@ -1214,7 +1218,6 @@ I am doing completion using the lovely Corfu
   (use-package corfu
      :ensure t
      :demand t
-     :after yasnippet
      :general
      (:states 'insert :keymaps 'corfu-map
                "RET"     nil
@@ -1229,10 +1232,10 @@ I am doing completion using the lovely Corfu
                "<escape>" #'corfu-quit)
      :init
      (setq corfu-auto t
-           corfu-auto-delay 0
-           corfu-auto-prefix 1
+           corfu-auto-delay 0.2
+           corfu-auto-prefix 3
            corfu-quit-no-match 'separator
-           corfu-popupinfo-delay 0
+           corfu-popupinfo-delay '(1.0 . 0.5)
            text-mode-ispell-word-completion nil)
       
      :config
@@ -1245,6 +1248,8 @@ I am doing completion using the lovely Corfu
      (define-key corfu-map (kbd "<RET>") nil))
      
   #+end_src
+
+#+RESULTS:
 
   #+begin_src emacs-lisp
          ;; A few more useful configurations...
@@ -1294,7 +1299,6 @@ I am doing completion using the lovely Corfu
                         #'cape-file)))
 
     (add-hook 'eglot-managed-mode-hook #'my/eglot-corfu-setup)
-    (add-hook 'lsp-completion-mode-hook #'my/lsp-corfu-setup)
 #+end_src
 
 ** Nix
@@ -1344,7 +1348,9 @@ The rust toolchain package is defined in =flake.nix=.
 ** Slint
 ~%dep%+{slint-lsp}~
 #+begin_src emacs-lisp
-  (use-package slint-mode)
+  (use-package slint-mode
+    :ensure t
+    :mode "\\.slint\\'")
   (message "language done")
 #+end_src
 
@@ -1359,12 +1365,12 @@ The rust toolchain package is defined in =flake.nix=.
    ;; need to modify its behaviour.
    ;;
    ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:cff33514-d3ac-4c16-a889-ea39d7346dc5
-   (use-package vertico
-     :ensure t
-     :config
-     (setq vertico-cycle t)
-     (setq vertico-resize nil)
-     (vertico-mode 1))
+  (use-package vertico
+    :ensure t
+    :config
+    (setq vertico-cycle t)
+    (setq vertico-resize nil)
+    (vertico-mode 1))
 
    ;; The `marginalia' package provides helpful annotations next to
    ;; completion candidates in the minibuffer.  The information on
@@ -1373,10 +1379,10 @@ The rust toolchain package is defined in =flake.nix=.
    ;; buffer, it shows the buffer's size, major mode, and the like.
    ;;
    ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:bd3f7a1d-a53d-4d3e-860e-25c5b35d8e7e
-   (use-package marginalia
-     :ensure t
-     :config
-     (marginalia-mode 1))
+  (use-package marginalia
+    :ensure t
+    :config
+    (marginalia-mode 1))
 
    ;; The `orderless' package lets the minibuffer use an out-of-order
    ;; pattern matching algorithm.  It matches space-separated words or
@@ -1389,11 +1395,11 @@ The rust toolchain package is defined in =flake.nix=.
    ;; algorithms), but let us keep things simple.
    ;;
    ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:7cc77fd0-8f98-4fc0-80be-48a758fcb6e2
-   (use-package orderless
-     :ensure t
-     :config
-     (setq orderless-matching-styles '(orderless-flex orderless-prefixes orderless-initialism orderless-regexp))
-     (setq completion-styles '(orderless basic)))
+  (use-package orderless
+    :ensure t
+    :config
+    (setq orderless-matching-styles '(orderless-flex orderless-prefixes orderless-initialism orderless-regexp))
+    (setq completion-styles '(orderless basic)))
 
    ;; The `consult' package provides lots of commands that are enhanced
    ;; variants of basic, built-in functionality.  One of the headline
@@ -1404,87 +1410,89 @@ The rust toolchain package is defined in =flake.nix=.
    ;; search" (as opposed to the basic C-s or C-r keys).
    ;;
    ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:22e97b4c-d88d-4deb-9ab3-f80631f9ff1d
-   (use-package consult
-     :ensure t
-     :config
-     (my-leader-def
-       :states '(normal)
-       "f" '("Find" . (keymap))
-       "f g" '("Recursive Grep" . consult-ripgrep)
-       "f f" '("Recursive File Name Search" . consult-fd)
-       "f l" '("Recursive File Name Search (Locate)" . consult-locate)
-       "f o" '("Search Outline" . consult-imenu-multi)
-       "f G" '("Grep Buffer" . consult-line)
-       "f h" '("Search for help" . consult-info)
-       "f m" '("Search for manpage" . consult-man)
-       "f b" '("Open Buffer" . consult-buffer)
-       "f B" '("Open Buffer in new tab" . consult-buffer-other-tab))
-  (my-leader-def
-       :states '(normal)
-       "C" '("Consult" . (keymap))
-       "C b" '("Bookmark" . consult-bookmark)
-       "C f" '("Focus" . consult-focus-lines)
-       "C y" '("Yank" . consult-yank-from-kill-ring)
-       "C r" '("Register" . consult-register)
-       "C m" '("Mark" . consult-mark)
-       "C F" '("Flymake" . consult-flymake)
-       "C e" '("Error" . consult-compile-error)
-       "C t" '("Theme" . consult-theme)
-       )
-     )
+  (use-package consult
+    :ensure t
+    :config
+    (my-leader-def
+      :states '(normal)
+      "f" '("Find" . (keymap))
+      "f g" '("Recursive Grep" . consult-ripgrep)
+      "f f" '("Recursive File Name Search" . consult-fd)
+      "f l" '("Recursive File Name Search (Locate)" . consult-locate)
+      "f o" '("Search Outline" . consult-imenu-multi)
+      "f G" '("Grep Buffer" . consult-line)
+      "f h" '("Search for help" . consult-info)
+      "f m" '("Search for manpage" . consult-man)
+      "f b" '("Open Buffer" . consult-buffer)
+      "f B" '("Open Buffer in new tab" . consult-buffer-other-tab))
+   (my-leader-def
+        :states '(normal)
+        "C" '("Consult" . (keymap))
+        "C b" '("Bookmark" . consult-bookmark)
+        "C f" '("Focus" . consult-focus-lines)
+        "C y" '("Yank" . consult-yank-from-kill-ring)
+        "C r" '("Register" . consult-register)
+        "C m" '("Mark" . consult-mark)
+        "C F" '("Flymake" . consult-flymake)
+        "C e" '("Error" . consult-compile-error)
+        "C t" '("Theme" . consult-theme)))
+       
+     
 
-     ;;:general ;; A recursive grep
-     ;;("M-s M-g" 'consult-grep
-     ;; ;; Search for files names recursively
-     ;; "M-s M-f" 'consult-find
-     ;; ;; search through the outline (headings) of the file
-     ;; "M-s M-o" 'consult-outline
-     ;; ;; Search the current buffer
-     ;; "M-s M-l" 'consult-line
-     ;; ;; Switch to another buffer, or bookmarked file, or recently
-     ;; ;; opened file.
-     ;; "M-s M-b" 'consult-buffer
-     ;; "C-x b" 'consult-buffer))
+      ;;:general ;; A recursive grep
+      ;;("M-s M-g" 'consult-grep
+      ;; ;; Search for files names recursively
+      ;; "M-s M-f" 'consult-find
+      ;; ;; search through the outline (headings) of the file
+      ;; "M-s M-o" 'consult-outline
+      ;; ;; Search the current buffer
+      ;; "M-s M-l" 'consult-line
+      ;; ;; Switch to another buffer, or bookmarked file, or recently
+      ;; ;; opened file.
+      ;; "M-s M-b" 'consult-buffer
+      ;; "C-x b" 'consult-buffer))
 
-   ;; The `embark' package lets you target the thing or context at point
-   ;; and select an action to perform on it.  Use the `embark-act'
-   ;; command while over something to find relevant commands.
-   ;;
-   ;; When inside the minibuffer, `embark' can collect/export the
-   ;; contents to a fully fledged Emacs buffer.  The `embark-collect'
-   ;; command retains the original behaviour of the minibuffer, meaning
-   ;; that if you navigate over the candidate at hit RET, it will do what
-   ;; the minibuffer would have done.  In contrast, the `embark-export'
-   ;; command reads the metadata to figure out what category this is and
-   ;; places them in a buffer whose major mode is specialised for that
-   ;; type of content.  For example, when we are completing against
-   ;; files, the export will take us to a `dired-mode' buffer; when we
-   ;; preview the results of a grep, the export will put us in a
-   ;; `grep-mode' buffer.
-   ;;
-   ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:61863da4-8739-42ae-a30f-6e9d686e1995
-   (use-package embark
-     :ensure t
-     :general
-     (:states '(normal)
-              "C-." 'embark-act)
+    ;; The `embark' package lets you target the thing or context at point
+    ;; and select an action to perform on it.  Use the `embark-act'
+    ;; command while over something to find relevant commands.
+    ;;
+    ;; When inside the minibuffer, `embark' can collect/export the
+    ;; contents to a fully fledged Emacs buffer.  The `embark-collect'
+    ;; command retains the original behaviour of the minibuffer, meaning
+    ;; that if you navigate over the candidate at hit RET, it will do what
+    ;; the minibuffer would have done.  In contrast, the `embark-export'
+    ;; command reads the metadata to figure out what category this is and
+    ;; places them in a buffer whose major mode is specialised for that
+    ;; type of content.  For example, when we are completing against
+    ;; files, the export will take us to a `dired-mode' buffer; when we
+    ;; preview the results of a grep, the export will put us in a
+    ;; `grep-mode' buffer.
+    ;;
+    ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:61863da4-8739-42ae-a30f-6e9d686e1995
+  (use-package embark
+    :ensure t
+    :general
+    (:states '(normal)
+             "C-." 'embark-act)
       
-     (:keymaps 'minibuffer-local-map
-               "C-c C-c" #'embark-collect
-               "C-c C-e" #'embark-export)
-     :config
-     (with-eval-after-load 'evil))
+    (:keymaps 'minibuffer-local-map
+              "C-c C-c" #'embark-collect
+              "C-c C-e" #'embark-export)
+    :config
+    (with-eval-after-load 'evil))
        
    ;;(define-key evil-normal-state-map (kbd "C-.") 'embark-act)
    ;;(define-key evil-visual-state-map (kbd "C-.") 'embark-act)
-       ;;;; Add other states if necessary (insert, motion, etc.)
+      ;;;; Add other states if necessary (insert, motion, etc.)
    ;;(evil-define-key 'normal 'global (kbd "C-.") 'embark-act)))
 
 
    ;; The `embark-consult' package is glue code to tie together `embark'
    ;; and `consult'.
-   (use-package embark-consult
-     :ensure t)
+  (use-package embark-consult
+    :ensure t
+    :after (embark consult)
+    :defer t)
 
    ;; The `wgrep' packages lets us edit the results of a grep search
    ;; while inside a `grep-mode' buffer.  All we need is to toggle the
@@ -1492,27 +1500,29 @@ The rust toolchain package is defined in =flake.nix=.
    ;; or C-c C-k to abort.
    ;;
    ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:9a3581df-ab18-4266-815e-2edd7f7e4852
-   (use-package wgrep
-     :ensure t
-     :bind ( :map grep-mode-map
-             ("e" . wgrep-change-to-wgrep-mode)
-             ("C-x C-q" . wgrep-change-to-wgrep-mode)
-             ("C-c C-c" . wgrep-finish-edit)))
+  (use-package wgrep
+    :ensure t
+    :bind ( :map grep-mode-map
+            ("e" . wgrep-change-to-wgrep-mode)
+            ("C-x C-q" . wgrep-change-to-wgrep-mode)
+            ("C-c C-c" . wgrep-finish-edit)))
 
    ;; The built-in `savehist-mode' saves minibuffer histories.  Vertico
    ;; can then use that information to put recently selected options at
    ;; the top.
    ;;
    ;; Further reading: https://protesilaos.com/emacs/dotemacs#h:25765797-27a5-431e-8aa4-cc890a6a913a
-   (savehist-mode 1)
+  (use-package savehist
+    :ensure t
+    :defer 1
+    :config
+    (savehist-mode 1))
 
-   ;; The built-in `recentf-mode' keeps track of recently visited files.
-   ;; You can then access those through the `consult-buffer' interface or
-   ;; with `recentf-open'/`recentf-open-files'.
-   ;;
-   ;; I do not use this facility, because the files I care about are
-   ;; either in projects or are bookmarked.
-   (recentf-mode 1)
+  (use-package recentf
+    :ensure t
+    :defer 1
+    :config
+    (recentf-mode 1))
   (message "minibuffer done")
 #+end_src
 
@@ -1520,7 +1530,7 @@ The rust toolchain package is defined in =flake.nix=.
 : minibuffer done
 
 This produces very annoying errors, fix before using again.
-* COMMENT Direnv
+  COMMENT Direnv
 #+begin_src emacs-lisp
 (use-package direnv
  :ensure t
